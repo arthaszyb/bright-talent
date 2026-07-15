@@ -1,3 +1,10 @@
 {
-  "skills": {}
+  "skills": {
+    "ticket-review": {
+      "commit": "7358f7ed211f1e64aed629ba232e814c0997fad7",
+      "integrity": "sha256:b7b696e7791e8da171940265d3c31dcdf4c0d579da8664a1bba25c21b357c7b3",
+      "path": "/Users/arthas/Downloads/my_projects/bright-talent/de-demo/skills/skills/ticket-review",
+      "version": "ticket-review/v0.1.0"
+    }
+  }
 }

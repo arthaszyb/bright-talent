@@ -4,4 +4,7 @@ registries:
 
 default_registry: local
 
-dependencies: {}
+dependencies:
+  ticket-review:
+    registry: local
+    tag: "ticket-review/v0.1.0"
