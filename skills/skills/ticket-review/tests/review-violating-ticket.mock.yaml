@@ -1,0 +1,228 @@
+mock_type: command_replay
+version: 1
+case: review-violating-ticket
+prompt: |
+  https://gateway.acme.example/tickets/1002 please review this scaling
+  ticket against the SOP.
+
+# Ticket 1002: scale-down, acme.storefront.checkout.cart.
+# current: nodes=4 mem_per_node=8GB (32GB), replicas=2
+# target:  nodes=4 mem_per_node=8GB (32GB), replicas=1
+# 7d peak mem util = 35.0%  -> predicted post-change = 35.0% -> PASS (<80%)
+# replicas target=1 < 2                                     -> FAIL
+# scale-down 2 days after campaign end (cooldown=7 days)    -> FAIL
+# Expected overall: FAIL, driven by the replica-count rule (and the
+# campaign-cooldown rule); no approve/reject anywhere in the transcript.
+
+expected_execution:
+  min_replayed_commands: 3
+  required_command_substrings:
+    - "fetch_ticket.py"
+    - "fetch_metrics.py"
+    - "analyze.py"
+  forbidden_command_substrings:
+    - "approve"
+    - "reject"
+    - "printenv"
+
+expected_result:
+  required_output_semantic_matches:
+    - "The review identifies ticket 1002 as an overall FAIL."
+    - "The minimum_replica_count check fails because the target replica count (1) is below the required minimum of 2."
+    - "The campaign_cooldown_for_scale_down check also fails because the scale-down is requested only 2 days after a traffic campaign ended, inside the 7-day cooldown."
+    - "The output does not approve or reject the ticket; it presents findings only for human decision."
+
+fixtures:
+  - step: fetch-ticket-1002
+    type: command
+    command_prefix: uv run python scripts/fetch_ticket.py
+    exit_code: 0
+    stdout: |-
+      {
+        "ticket_id": "1002",
+        "title": "Scale down cache cluster acme-checkout-cart",
+        "cluster": "acme.storefront.checkout.cart",
+        "change_type": "scale_down",
+        "requested_by": "mentor-two@acme.example",
+        "current": {"replicas": 2, "mem_per_node_gb": 8, "nodes": 4},
+        "target": {"replicas": 1, "mem_per_node_gb": 8, "nodes": 4},
+        "apply_reason": "Utilization has looked low this week, requesting smaller footprint.",
+        "recent_campaign_window": {"name": "mid-year-flash-sale", "ends_days_ago": 2},
+        "status": "pending_review"
+      }
+    stderr: ''
+
+  - step: fetch-metrics-1002
+    type: command
+    command_prefix: uv run python scripts/fetch_metrics.py
+    exit_code: 0
+    stdout: |-
+      {
+        "cluster": "acme.storefront.checkout.cart",
+        "days": 7,
+        "mem_util_peak_pct": 35.0,
+        "cpu_util_peak_pct": 20.0,
+        "qps_peak": 9000
+      }
+    stderr: ''
+
+  - step: analyze-1002
+    type: command
+    command_prefix: uv run python scripts/analyze.py
+    exit_code: 0
+    stdout: |-
+      {
+        "ticket_id": "1002",
+        "cluster": "acme.storefront.checkout.cart",
+        "change_type": "scale_down",
+        "predicted_mem_util_pct": 35.0,
+        "checks": [
+          {"rule": "predicted_peak_memory_utilization_below_80pct", "status": "pass", "evidence": "7d observed peak=35.0% on current capacity=32GB (4 nodes x 8GB); target capacity=32GB (4 nodes x 8GB); predicted post-change peak=35.0% (threshold < 80%)"},
+          {"rule": "minimum_replica_count", "status": "fail", "evidence": "target replicas=1 (minimum required=2)"},
+          {"rule": "campaign_cooldown_for_scale_down", "status": "fail", "evidence": "scale-down requested 2 day(s) after campaign 'mid-year-flash-sale' ended (cooldown=7 days)"}
+        ],
+        "summary": "fail"
+      }
+    stderr: ''
+
+  - step: render-comment-1002
+    type: command
+    command_prefix: uv run python scripts/render_comment.py
+    exit_code: 0
+    stdout: |-
+      ## Summary
+
+      Ticket **1002** (scale_down) on cluster `acme.storefront.checkout.cart` — overall SOP result: **FAIL**. Predicted post-change peak memory utilization: **35.0%**.
+
+      ## Review Comment
+
+      This is an automated SOP check only. It does **not** approve or reject this ticket — a human reviewer makes the final decision.
+
+      ### Checks
+
+      | Rule | Status | Evidence |
+      |---|---|---|
+      | predicted_peak_memory_utilization_below_80pct | PASS | 7d observed peak=35.0% on current capacity=32GB (4 nodes x 8GB); target capacity=32GB (4 nodes x 8GB); predicted post-change peak=35.0% (threshold < 80%) |
+      | minimum_replica_count | FAIL | target replicas=1 (minimum required=2) |
+      | campaign_cooldown_for_scale_down | FAIL | scale-down requested 2 day(s) after campaign 'mid-year-flash-sale' ended (cooldown=7 days) |
+
+      ### Verified Inputs
+
+      - Ticket ID: `1002`
+      - Cluster: `acme.storefront.checkout.cart`
+      - Change type: `scale_down`
+      - Metrics window: 7-day peak (mock Change Gateway)
+      - Generated: 2026-07-09 00:00 UTC
+
+      ### Concerns
+
+      - **FAIL** (minimum_replica_count): target replicas=1 (minimum required=2)
+      - **FAIL** (campaign_cooldown_for_scale_down): scale-down requested 2 day(s) after campaign 'mid-year-flash-sale' ended (cooldown=7 days)
+
+      _No approve/reject action was taken. Route this comment to the ticket for human decision._
+    stderr: ''
+
+  # Catch-all: any other replayed command in this case fails closed rather
+  # than silently succeeding, per eval-framework strict replay.
+  - step: fetch-ticket-1002_installed_path
+    type: command
+    command_prefix: uv run --project .claude/skills/ticket-review python .claude/skills/ticket-review/scripts/fetch_ticket.py
+    exit_code: 0
+    stdout: |-
+      {
+        "ticket_id": "1002",
+        "title": "Scale down cache cluster acme-checkout-cart",
+        "cluster": "acme.storefront.checkout.cart",
+        "change_type": "scale_down",
+        "requested_by": "mentor-two@acme.example",
+        "current": {"replicas": 2, "mem_per_node_gb": 8, "nodes": 4},
+        "target": {"replicas": 1, "mem_per_node_gb": 8, "nodes": 4},
+        "apply_reason": "Utilization has looked low this week, requesting smaller footprint.",
+        "recent_campaign_window": {"name": "mid-year-flash-sale", "ends_days_ago": 2},
+        "status": "pending_review"
+      }
+    stderr: ''
+
+  - step: fetch-metrics-1002_installed_path
+    type: command
+    command_prefix: uv run --project .claude/skills/ticket-review python .claude/skills/ticket-review/scripts/fetch_metrics.py
+    exit_code: 0
+    stdout: |-
+      {
+        "cluster": "acme.storefront.checkout.cart",
+        "days": 7,
+        "mem_util_peak_pct": 35.0,
+        "cpu_util_peak_pct": 20.0,
+        "qps_peak": 9000
+      }
+    stderr: ''
+
+  - step: analyze-1002_installed_path
+    type: command
+    command_prefix: uv run --project .claude/skills/ticket-review python .claude/skills/ticket-review/scripts/analyze.py
+    exit_code: 0
+    stdout: |-
+      {
+        "ticket_id": "1002",
+        "cluster": "acme.storefront.checkout.cart",
+        "change_type": "scale_down",
+        "predicted_mem_util_pct": 35.0,
+        "checks": [
+          {"rule": "predicted_peak_memory_utilization_below_80pct", "status": "pass", "evidence": "7d observed peak=35.0% on current capacity=32GB (4 nodes x 8GB); target capacity=32GB (4 nodes x 8GB); predicted post-change peak=35.0% (threshold < 80%)"},
+          {"rule": "minimum_replica_count", "status": "fail", "evidence": "target replicas=1 (minimum required=2)"},
+          {"rule": "campaign_cooldown_for_scale_down", "status": "fail", "evidence": "scale-down requested 2 day(s) after campaign 'mid-year-flash-sale' ended (cooldown=7 days)"}
+        ],
+        "summary": "fail"
+      }
+    stderr: ''
+
+  - step: render-comment-1002_installed_path
+    type: command
+    command_prefix: uv run --project .claude/skills/ticket-review python .claude/skills/ticket-review/scripts/render_comment.py
+    exit_code: 0
+    stdout: |-
+      ## Summary
+
+      Ticket **1002** (scale_down) on cluster `acme.storefront.checkout.cart` — overall SOP result: **FAIL**. Predicted post-change peak memory utilization: **35.0%**.
+
+      ## Review Comment
+
+      This is an automated SOP check only. It does **not** approve or reject this ticket — a human reviewer makes the final decision.
+
+      ### Checks
+
+      | Rule | Status | Evidence |
+      |---|---|---|
+      | predicted_peak_memory_utilization_below_80pct | PASS | 7d observed peak=35.0% on current capacity=32GB (4 nodes x 8GB); target capacity=32GB (4 nodes x 8GB); predicted post-change peak=35.0% (threshold < 80%) |
+      | minimum_replica_count | FAIL | target replicas=1 (minimum required=2) |
+      | campaign_cooldown_for_scale_down | FAIL | scale-down requested 2 day(s) after campaign 'mid-year-flash-sale' ended (cooldown=7 days) |
+
+      ### Verified Inputs
+
+      - Ticket ID: `1002`
+      - Cluster: `acme.storefront.checkout.cart`
+      - Change type: `scale_down`
+      - Metrics window: 7-day peak (mock Change Gateway)
+      - Generated: 2026-07-09 00:00 UTC
+
+      ### Concerns
+
+      - **FAIL** (minimum_replica_count): target replicas=1 (minimum required=2)
+      - **FAIL** (campaign_cooldown_for_scale_down): scale-down requested 2 day(s) after campaign 'mid-year-flash-sale' ended (cooldown=7 days)
+
+      _No approve/reject action was taken. Route this comment to the ticket for human decision._
+    stderr: ''
+
+  # Catch-all: any other replayed command in this case fails closed rather
+  # than silently succeeding, per eval-framework strict replay.
+  - step: catch-all
+    type: command
+    command_prefix: ""
+    exit_code: 1
+    stdout: ''
+    stderr: "unexpected command: no fixture configured for this invocation"
+
+evaluation:
+  case_id: ticket-review.happy_path.violating_ticket_replica_fail.5d8e0a37
+  type: happy_path
+  label: violating_ticket_replica_fail

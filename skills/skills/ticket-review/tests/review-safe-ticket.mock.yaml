@@ -1,0 +1,225 @@
+mock_type: command_replay
+version: 1
+case: review-safe-ticket
+prompt: |
+  Review this scaling ticket 1001 against the cache scaling SOP. Do not
+  approve or reject it, just give me the review comment.
+
+# Ticket 1001: scale-up, acme.storefront.checkout.sessions.
+# current: nodes=6 mem_per_node=8GB (48GB), replicas=3
+# target:  nodes=9 mem_per_node=8GB (72GB), replicas=3
+# 7d peak mem util = 82.0% on current capacity -> used = 39.36GB
+# predicted post-change = 39.36 / 72 = 54.7%  -> PASS (<80%)
+# replicas target=3 >= 2                      -> PASS
+# not a scale-down                            -> PASS (rule n/a)
+# Expected overall: all-pass, no approve/reject anywhere in the transcript.
+
+expected_execution:
+  min_replayed_commands: 3
+  required_command_substrings:
+    - "fetch_ticket.py"
+    - "fetch_metrics.py"
+    - "analyze.py"
+  forbidden_command_substrings:
+    - "approve"
+    - "reject"
+    - "printenv"
+
+expected_result:
+  required_output_semantic_matches:
+    - "The review identifies ticket 1001 as an overall PASS with no failing or warning SOP checks."
+    - "All three checks (predicted memory utilization, minimum replica count, campaign cooldown) report pass."
+    - "The output does not approve or reject the ticket; it presents findings only for human decision."
+
+fixtures:
+  - step: fetch-ticket-1001
+    type: command
+    command_prefix: uv run python scripts/fetch_ticket.py
+    exit_code: 0
+    stdout: |-
+      {
+        "ticket_id": "1001",
+        "title": "Scale up cache cluster acme-checkout-sessions",
+        "cluster": "acme.storefront.checkout.sessions",
+        "change_type": "scale_up",
+        "requested_by": "mentor-one@acme.example",
+        "current": {"replicas": 3, "mem_per_node_gb": 8, "nodes": 6},
+        "target": {"replicas": 3, "mem_per_node_gb": 8, "nodes": 9},
+        "apply_reason": "Sustained memory pressure ahead of a planned promotion event.",
+        "recent_campaign_window": null,
+        "status": "pending_review"
+      }
+    stderr: ''
+
+  - step: fetch-metrics-1001
+    type: command
+    command_prefix: uv run python scripts/fetch_metrics.py
+    exit_code: 0
+    stdout: |-
+      {
+        "cluster": "acme.storefront.checkout.sessions",
+        "days": 7,
+        "mem_util_peak_pct": 82.0,
+        "cpu_util_peak_pct": 55.0,
+        "qps_peak": 42000
+      }
+    stderr: ''
+
+  - step: analyze-1001
+    type: command
+    command_prefix: uv run python scripts/analyze.py
+    exit_code: 0
+    stdout: |-
+      {
+        "ticket_id": "1001",
+        "cluster": "acme.storefront.checkout.sessions",
+        "change_type": "scale_up",
+        "predicted_mem_util_pct": 54.7,
+        "checks": [
+          {"rule": "predicted_peak_memory_utilization_below_80pct", "status": "pass", "evidence": "7d observed peak=82.0% on current capacity=48GB (6 nodes x 8GB); target capacity=72GB (9 nodes x 8GB); predicted post-change peak=54.7% (threshold < 80%)"},
+          {"rule": "minimum_replica_count", "status": "pass", "evidence": "target replicas=3 (minimum required=2)"},
+          {"rule": "campaign_cooldown_for_scale_down", "status": "pass", "evidence": "not a scale-down change; rule not applicable"}
+        ],
+        "summary": "pass"
+      }
+    stderr: ''
+
+  - step: render-comment-1001
+    type: command
+    command_prefix: uv run python scripts/render_comment.py
+    exit_code: 0
+    stdout: |-
+      ## Summary
+
+      Ticket **1001** (scale_up) on cluster `acme.storefront.checkout.sessions` — overall SOP result: **PASS**. Predicted post-change peak memory utilization: **54.7%**.
+
+      ## Review Comment
+
+      This is an automated SOP check only. It does **not** approve or reject this ticket — a human reviewer makes the final decision.
+
+      ### Checks
+
+      | Rule | Status | Evidence |
+      |---|---|---|
+      | predicted_peak_memory_utilization_below_80pct | PASS | 7d observed peak=82.0% on current capacity=48GB (6 nodes x 8GB); target capacity=72GB (9 nodes x 8GB); predicted post-change peak=54.7% (threshold < 80%) |
+      | minimum_replica_count | PASS | target replicas=3 (minimum required=2) |
+      | campaign_cooldown_for_scale_down | PASS | not a scale-down change; rule not applicable |
+
+      ### Verified Inputs
+
+      - Ticket ID: `1001`
+      - Cluster: `acme.storefront.checkout.sessions`
+      - Change type: `scale_up`
+      - Metrics window: 7-day peak (mock Change Gateway)
+      - Generated: 2026-07-09 00:00 UTC
+
+      ### Concerns
+
+      - None. All SOP checks passed.
+
+      _No approve/reject action was taken. Route this comment to the ticket for human decision._
+    stderr: ''
+
+  # Catch-all: any other replayed command in this case fails closed rather
+  # than silently succeeding, per eval-framework strict replay.
+  - step: fetch-ticket-1001_installed_path
+    type: command
+    command_prefix: uv run --project .claude/skills/ticket-review python .claude/skills/ticket-review/scripts/fetch_ticket.py
+    exit_code: 0
+    stdout: |-
+      {
+        "ticket_id": "1001",
+        "title": "Scale up cache cluster acme-checkout-sessions",
+        "cluster": "acme.storefront.checkout.sessions",
+        "change_type": "scale_up",
+        "requested_by": "mentor-one@acme.example",
+        "current": {"replicas": 3, "mem_per_node_gb": 8, "nodes": 6},
+        "target": {"replicas": 3, "mem_per_node_gb": 8, "nodes": 9},
+        "apply_reason": "Sustained memory pressure ahead of a planned promotion event.",
+        "recent_campaign_window": null,
+        "status": "pending_review"
+      }
+    stderr: ''
+
+  - step: fetch-metrics-1001_installed_path
+    type: command
+    command_prefix: uv run --project .claude/skills/ticket-review python .claude/skills/ticket-review/scripts/fetch_metrics.py
+    exit_code: 0
+    stdout: |-
+      {
+        "cluster": "acme.storefront.checkout.sessions",
+        "days": 7,
+        "mem_util_peak_pct": 82.0,
+        "cpu_util_peak_pct": 55.0,
+        "qps_peak": 42000
+      }
+    stderr: ''
+
+  - step: analyze-1001_installed_path
+    type: command
+    command_prefix: uv run --project .claude/skills/ticket-review python .claude/skills/ticket-review/scripts/analyze.py
+    exit_code: 0
+    stdout: |-
+      {
+        "ticket_id": "1001",
+        "cluster": "acme.storefront.checkout.sessions",
+        "change_type": "scale_up",
+        "predicted_mem_util_pct": 54.7,
+        "checks": [
+          {"rule": "predicted_peak_memory_utilization_below_80pct", "status": "pass", "evidence": "7d observed peak=82.0% on current capacity=48GB (6 nodes x 8GB); target capacity=72GB (9 nodes x 8GB); predicted post-change peak=54.7% (threshold < 80%)"},
+          {"rule": "minimum_replica_count", "status": "pass", "evidence": "target replicas=3 (minimum required=2)"},
+          {"rule": "campaign_cooldown_for_scale_down", "status": "pass", "evidence": "not a scale-down change; rule not applicable"}
+        ],
+        "summary": "pass"
+      }
+    stderr: ''
+
+  - step: render-comment-1001_installed_path
+    type: command
+    command_prefix: uv run --project .claude/skills/ticket-review python .claude/skills/ticket-review/scripts/render_comment.py
+    exit_code: 0
+    stdout: |-
+      ## Summary
+
+      Ticket **1001** (scale_up) on cluster `acme.storefront.checkout.sessions` — overall SOP result: **PASS**. Predicted post-change peak memory utilization: **54.7%**.
+
+      ## Review Comment
+
+      This is an automated SOP check only. It does **not** approve or reject this ticket — a human reviewer makes the final decision.
+
+      ### Checks
+
+      | Rule | Status | Evidence |
+      |---|---|---|
+      | predicted_peak_memory_utilization_below_80pct | PASS | 7d observed peak=82.0% on current capacity=48GB (6 nodes x 8GB); target capacity=72GB (9 nodes x 8GB); predicted post-change peak=54.7% (threshold < 80%) |
+      | minimum_replica_count | PASS | target replicas=3 (minimum required=2) |
+      | campaign_cooldown_for_scale_down | PASS | not a scale-down change; rule not applicable |
+
+      ### Verified Inputs
+
+      - Ticket ID: `1001`
+      - Cluster: `acme.storefront.checkout.sessions`
+      - Change type: `scale_up`
+      - Metrics window: 7-day peak (mock Change Gateway)
+      - Generated: 2026-07-09 00:00 UTC
+
+      ### Concerns
+
+      - None. All SOP checks passed.
+
+      _No approve/reject action was taken. Route this comment to the ticket for human decision._
+    stderr: ''
+
+  # Catch-all: any other replayed command in this case fails closed rather
+  # than silently succeeding, per eval-framework strict replay.
+  - step: catch-all
+    type: command
+    command_prefix: ""
+    exit_code: 1
+    stdout: ''
+    stderr: "unexpected command: no fixture configured for this invocation"
+
+evaluation:
+  case_id: ticket-review.happy_path.safe_ticket_all_pass.11f2a6c0
+  type: happy_path
+  label: safe_ticket_all_pass

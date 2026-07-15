@@ -1,0 +1,57 @@
+# Routing tests for ticket-review.
+
+should_trigger:
+  - prompt: "https://gateway.acme.example/tickets/1002 please review this scaling ticket"
+    evaluation:
+      case_id: ticket-review.typical_scenario.ticket_url_review.7a1c2b0e
+      type: typical_scenario
+      label: ticket_url_review
+  - prompt: "review this scaling ticket 1002"
+    evaluation:
+      case_id: ticket-review.typical_scenario.bare_id_review.3f9d8e21
+      type: typical_scenario
+      label: bare_id_review
+  - prompt: >-
+      Can you check this ticket against the cache scaling SOP?
+      {"ticket_id": "1003", "cluster": "acme.storefront.search.cache",
+      "change_type": "scale_up", "current": {"replicas": 2,
+      "mem_per_node_gb": 16, "nodes": 5}, "target": {"replicas": 2,
+      "mem_per_node_gb": 16, "nodes": 6}}
+    evaluation:
+      case_id: ticket-review.typical_scenario.pasted_ticket_json.9b4e7a55
+      type: typical_scenario
+      label: pasted_ticket_json
+  - prompt: "risk analysis on gateway.acme.example/tickets/1001 before I sign off"
+    evaluation:
+      case_id: ticket-review.typical_scenario.risk_analysis_phrasing.5c1f0d88
+      type: typical_scenario
+      label: risk_analysis_phrasing
+
+should_not_trigger:
+  - prompt: "what's the status of ticket 1001"
+    evaluation:
+      case_id: ticket-review.typical_scenario.status_query_not_review.e4a9c716
+      type: typical_scenario
+      label: status_query_not_review
+  - prompt: "approve ticket 1001"
+    evaluation:
+      case_id: ticket-review.typical_scenario.approval_request_not_review.b02f61aa
+      type: typical_scenario
+      label: approval_request_not_review
+  - prompt: "reject ticket 1002 right now"
+    evaluation:
+      case_id: ticket-review.typical_scenario.rejection_request_not_review.19d7fe33
+      type: typical_scenario
+      label: rejection_request_not_review
+  - prompt: "list all pending tickets in the Change Gateway"
+    evaluation:
+      case_id: ticket-review.typical_scenario.listing_request_out_of_scope.a68c0f4d
+      type: typical_scenario
+      label: listing_request_out_of_scope
+  - prompt: "what does the cache scaling SOP say about replica counts?"
+    evaluation:
+      case_id: ticket-review.typical_scenario.sop_lookup_not_review.d3e2b901
+      type: typical_scenario
+      label: sop_lookup_not_review
+
+pass_threshold: 0.9
