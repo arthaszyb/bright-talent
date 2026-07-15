@@ -1,0 +1,55 @@
+schema_version: 1
+
+identity:
+  id: DE-FIXTURE-001
+  team: acme-fixture-team
+  description: "Builder self-test fixture (good instance)"
+
+scope:
+  service_catalog:
+    - acme.demo.fixture
+
+base:
+  version: "0.1.0"
+  repo: "file://../../scaffold"
+
+settings:
+  permissions:
+    extra_allow: []
+    extra_deny: []
+    extra_ask: []
+    default_mode: default
+  env: {}
+  hooks: {}
+
+mcp:
+  extra_servers: {}
+  enable_project_servers: []
+  disable_servers: []
+
+escalation:
+  enabled: true
+  mentor_emails:
+    - mentor-one@acme.example
+  show_event_id: true
+  event_store: "/tmp/de-agent-escalations/events.jsonl"
+  dedup_window_seconds: 300
+  guard:
+    enabled: true
+    max_tool_failures: 3
+    max_repeated_attempts: 3
+
+claude_md:
+  extra_rules: ""
+
+kb:
+  team_index: kb/team/_index.md
+  live_refs: []
+
+bridge:
+  enabled: false
+
+advanced:
+  model: null
+  output_style: null
+  worktree: {}

@@ -1,0 +1,228 @@
+#!/usr/bin/env bash
+# de — the instance CLI (bash, managed file).
+# Spec: docs/10-scaffold/de-cli-spec.md. Thin dispatcher: every non-trivial
+# branch delegates into `builder/*.py` (via `uv run`) or execs `claude`.
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Resolution helpers
+# ---------------------------------------------------------------------------
+
+script_path() {
+  # Resolve the real path of this script (follow symlinks where possible).
+  local src="${BASH_SOURCE[0]}"
+  if command -v readlink >/dev/null 2>&1; then
+    local resolved
+    resolved="$(readlink -f "$src" 2>/dev/null || true)"
+    if [ -n "$resolved" ]; then
+      echo "$resolved"
+      return
+    fi
+  fi
+  echo "$src"
+}
+
+SCRIPT_DIR="$(cd "$(dirname "$(script_path)")" && pwd)"
+
+# First positional argument that is not a flag is treated as the instance
+# directory (supports both the spec's cwd-implicit form, `./de validate`
+# from inside an instance repo, and this monorepo's explicit form,
+# `./de validate path/to/instance`).
+resolve_instance_root() {
+  local candidate="${1:-.}"
+  (cd "$candidate" 2>/dev/null && pwd) || echo ""
+}
+
+resolve_scaffold_root() {
+  local instance_root="$1"
+  if [ -n "${DE_SCAFFOLD_ROOT:-}" ]; then
+    echo "$DE_SCAFFOLD_ROOT"
+    return
+  fi
+  local candidate="$instance_root/../../scaffold"
+  if [ -d "$candidate" ]; then
+    (cd "$candidate" && pwd)
+    return
+  fi
+  # Fallback: this script itself lives at the scaffold root (used when `de`
+  # is invoked directly from the scaffold, e.g. the builder self-test).
+  echo "$SCRIPT_DIR"
+}
+
+set_scaffold_root() {
+  SCAFFOLD_ROOT="$(resolve_scaffold_root "$1")"
+  export DE_SCAFFOLD_ROOT="$SCAFFOLD_ROOT"
+}
+
+load_dotenv() {
+  local instance_root="$1"
+  if [ -f "$instance_root/.env" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "$instance_root/.env"
+    set +a
+  fi
+}
+
+export_env_floor() {
+  local instance_root="$1"
+  local runtime_subdir="${2:-runtime}"
+  export DE_AGENT_PROJECT_DIR="$instance_root/$runtime_subdir"
+  if [ -z "${DE_SCOPE_SERVICE_CATALOG:-}" ]; then
+    export DE_SCOPE_SERVICE_CATALOG="$DE_DEMO_ROOT/mocks/service_catalog.json"
+  fi
+}
+
+ensure_uv() {
+  if ! command -v uv >/dev/null 2>&1; then
+    echo "error: 'uv' is required but not found on PATH. Install: https://docs.astral.sh/uv/" >&2
+    exit 1
+  fi
+}
+
+run_builder() {
+  # run_builder <module> <instance_root> [args...]
+  local module="$1"; shift
+  local instance_root="$1"; shift
+  ensure_uv
+  uv run --project "$SCAFFOLD_ROOT/builder" python -m "builder.$module" "$instance_root" "$@"
+}
+
+usage() {
+  cat <<'EOF'
+de — the Digital Employee instance CLI
+
+Usage: de <command> [instance_dir] [options]
+
+Commands:
+  validate [instance_dir]         Schema + VERSION validation
+  build    [instance_dir]         Compose runtime/ (+ editor/) from base + instance config
+  doctor   [instance_dir]         Environment + config completeness checks
+  status   [instance_dir]         Build summary
+  diff     [instance_dir]         Compare runtime/ against the last build manifest
+  skills   [instance_dir]         List resolved skill dependencies
+  start    [instance_dir]         Launch `claude` inside runtime/
+  edit     [instance_dir]         Launch `claude` inside editor/ (restricted)
+  serve                           Bridge HTTP service (later milestone)
+  kb                              Knowledge-base live refs (later milestone)
+  eval                            Eval harness smoke/coverage (later milestone)
+  upgrade  [instance_dir]         Base version upgrade (later milestone)
+  release  [instance_dir]         Git tag release (later milestone)
+  help                            Show this message
+EOF
+}
+
+# ---------------------------------------------------------------------------
+# Dispatch
+# ---------------------------------------------------------------------------
+
+if [ $# -lt 1 ]; then
+  usage >&2
+  exit 2
+fi
+
+CMD="$1"; shift || true
+
+# de-demo root, used for DE_SCOPE_SERVICE_CATALOG's default.
+DE_DEMO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+case "$CMD" in
+  validate|build|doctor|status|diff|skills)
+    INSTANCE_ARG="${1:-.}"
+    if [ "$INSTANCE_ARG" != "." ] && [[ "$INSTANCE_ARG" != -* ]]; then
+      shift || true
+    else
+      INSTANCE_ARG="."
+    fi
+    if [ ! -d "$INSTANCE_ARG" ]; then
+      echo "error: instance directory not found: $INSTANCE_ARG" >&2
+      exit 2
+    fi
+    INSTANCE_ROOT="$(resolve_instance_root "$INSTANCE_ARG")"
+    set_scaffold_root "$INSTANCE_ROOT"
+    load_dotenv "$INSTANCE_ROOT"
+    export_env_floor "$INSTANCE_ROOT"
+    run_builder "$CMD" "$INSTANCE_ROOT" "$@"
+    exit $?
+    ;;
+
+  start|edit)
+    INSTANCE_ARG="${1:-.}"
+    if [ "$INSTANCE_ARG" != "." ] && [[ "$INSTANCE_ARG" != -* ]]; then
+      shift || true
+    else
+      INSTANCE_ARG="."
+    fi
+    if [ ! -d "$INSTANCE_ARG" ]; then
+      echo "error: instance directory not found: $INSTANCE_ARG" >&2
+      exit 2
+    fi
+    INSTANCE_ROOT="$(resolve_instance_root "$INSTANCE_ARG")"
+    set_scaffold_root "$INSTANCE_ROOT"
+    load_dotenv "$INSTANCE_ROOT"
+    if [ "$CMD" = "start" ]; then
+      TARGET_DIR="$INSTANCE_ROOT/runtime"
+      if [ ! -f "$TARGET_DIR/.build-info.json" ] && [ ! -f "$INSTANCE_ROOT/.build-info.json" ]; then
+        echo "No build found. Running auto-build..." >&2
+        run_builder build "$INSTANCE_ROOT"
+      fi
+      export_env_floor "$INSTANCE_ROOT" "runtime"
+    else
+      TARGET_DIR="$INSTANCE_ROOT/editor"
+      if [ ! -f "$TARGET_DIR/CLAUDE.md" ]; then
+        echo "No build found. Running auto-build..." >&2
+        run_builder build "$INSTANCE_ROOT"
+      fi
+      export_env_floor "$INSTANCE_ROOT" "editor"
+    fi
+    if ! command -v claude >/dev/null 2>&1; then
+      echo "error: 'claude' CLI not found on PATH. Install: https://docs.claude.com/claude-code" >&2
+      exit 1
+    fi
+    cd "$TARGET_DIR"
+    exec claude "$@"
+    ;;
+
+  upgrade|release)
+    INSTANCE_ARG="${1:-.}"
+    if [ "$INSTANCE_ARG" != "." ] && [[ "$INSTANCE_ARG" != -* ]]; then
+      shift || true
+    else
+      INSTANCE_ARG="."
+    fi
+    if [ ! -d "$INSTANCE_ARG" ]; then
+      echo "error: instance directory not found: $INSTANCE_ARG" >&2
+      exit 2
+    fi
+    INSTANCE_ROOT="$(resolve_instance_root "$INSTANCE_ARG")"
+    set_scaffold_root "$INSTANCE_ROOT"
+    run_builder "$CMD" "$INSTANCE_ROOT" "$@"
+    exit $?
+    ;;
+
+  serve|stop)
+    echo "serve/stop: provided by bridge/ in a later milestone (see docs/10-scaffold/de-cli-spec.md §2.3)." >&2
+    exit 1
+    ;;
+
+  kb)
+    echo "kb: provided by the builder's kb module in a later milestone (see docs/10-scaffold/de-cli-spec.md §2.7)." >&2
+    exit 1
+    ;;
+
+  eval)
+    echo "eval: provided by eval/ (de-eval) in a later milestone (see docs/10-scaffold/de-cli-spec.md §2.9)." >&2
+    exit 1
+    ;;
+
+  help|-h|--help)
+    usage
+    exit 0
+    ;;
+
+  *)
+    echo "error: unknown command '$CMD'" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

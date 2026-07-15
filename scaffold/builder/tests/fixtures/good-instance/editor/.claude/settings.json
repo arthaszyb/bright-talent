@@ -1,7 +1,4 @@
-{# editor-settings.json.j2 — Claude Code settings for editor mode (restricted)
-   Variable contract (StrictUndefined):
-   - empty (no variables; uses fixed policy for config editing)
-#}
+
 {
   "permissions": {
     "defaultMode": "plan",

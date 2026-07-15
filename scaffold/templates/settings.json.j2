@@ -8,9 +8,6 @@
    - extra_rules: str (may be empty)
 #}
 {
-  "version": "0.1",
-  "workingDirectory": "./runtime",
-
   "permissions": {
     "defaultMode": "{{ default_mode | default('acceptEdits', true) }}",
     "allow": [
@@ -26,19 +23,15 @@
 {% endif %}
     ],
     "deny": [
-      "Bash(rm -rf *)",
-      "Bash(rm -rf /)",
-      "Bash(rm -rf ~)",
-      "Bash(mkfs*)",
-      "Bash(dd if=*)",
-      "Bash(*|rm -rf*)",
-      "Bash(*|mkfs*)",
-      "Bash(curl*|sh)",
-      "Bash(wget*|sh)",
-      "Edit(/.*settings.json)",
-      "Edit(/.*CLAUDE.md)",
-      "Edit(/.*/.claude/hooks/*)",
-      "Edit(/.*/.claude/policy/*)"
+      "Bash(rm -rf:*)",
+      "Bash(mkfs:*)",
+      "Bash(dd:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Edit(CLAUDE.md)",
+      "Edit(.claude/settings.json)",
+      "Edit(.claude/hooks/**)",
+      "Edit(.claude/policy/**)"
 {% if extra_deny %}
       {%- for pattern in extra_deny %},
       "{{ pattern }}"
@@ -46,8 +39,8 @@
 {% endif %}
     ],
     "ask": [
-      "Bash(kubectl *)",
-      "Bash(sudo *)"
+      "Bash(kubectl:*)",
+      "Bash(sudo:*)"
 {% if extra_ask %}
       {%- for pattern in extra_ask %},
       "{{ pattern }}"

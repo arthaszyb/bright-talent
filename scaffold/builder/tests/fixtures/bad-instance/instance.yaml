@@ -1,0 +1,7 @@
+# Deliberately invalid: identity missing entirely, scope has the wrong type.
+schema_version: 1
+
+scope: "acme.demo.fixture"
+
+base:
+  version: "0.1.0"

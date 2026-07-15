@@ -24,8 +24,8 @@ This document is the binding integration design. `ARCHITECTURE.md` fixes layout/
 - `de init <dir>` is pure bash: stamps `scaffold/templates/instance/` + copies managed files (`de`, `Makefile`) and records them in `.managed-files.json` (see S2).
 
 ### S2. Build artifacts (produced by builder, consumed by eval/bridge/console)
-- `runtime/.build-manifest.json` — `{files: {<path>: {sha256, source: base|layer:<n>|instance|generated}}, build_info: {...hashes, built_at, base_version}}`. Consumed by `de diff` (drift) and console (drift panel).
-- `runtime/.build-info.json` — flat summary incl. `identity_id`, `scope` (list), `base_version`, `skills` (name→version), `claude_cli_version` (from `claude --version` at build time; governance §1 pin rule). Consumed by `de start/serve` (exports `DE_SCOPE_SERVICE_CATALOG`), eval smoke, console.
+- `<instance_root>/.build-manifest.json` — `{files: [{path, sha256, source: base|template|instance|seed}]}` (paths relative to `runtime/`). Consumed by `de diff` (drift) and console (drift panel). *(W2 as-built: artifacts live at instance root, not under runtime/; entry is a list with `source` per file.)*
+- `<instance_root>/.build-info.json` — flat summary: `instance_identity`, `scaffold_version`, `built_at`, `claude_cli_version` (from `claude --version` at build time; governance §1 pin rule). *(W2 as-built: scope/skills live in `.managed/skills-lock` + rendered CLAUDE.md, not duplicated here; consumers needing scope read instance.yaml.)* Consumed by eval smoke and console.
 - `<instance_root>/.managed-files.json` — `{files: [{path, template_sha256, synced_at, scaffold_version}]}`, committed. Written by builder/init on every managed-file sync; consumed by console's `both_changed` conflict detection. **New requirement surfaced by console spec — builder task must include it.**
 - Build runs twice: `runtime/` (full) and `editor/` (restricted: editor-CLAUDE.md, no ops skills).
 
