@@ -7,4 +7,4 @@ default_registry: local
 dependencies:
   ticket-review:
     registry: local
-    tag: "ticket-review/v0.1.0"
+    tag: "ticket-review/v0.1.1"
