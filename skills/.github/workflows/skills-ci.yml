@@ -1,0 +1,151 @@
+name: skills-ci
+
+# Gate order matches release-and-ci.md §3:
+#   detect-release -> lint -> version-check -> triggers -> safety -> e2e
+#   -> (on merge to main) auto-tag + move `latest`
+#
+# Every gate below shells out to the plain scripts in skills/ci/ — the
+# workflow never reimplements gate logic itself (DESIGN.md S4). Run the same
+# scripts locally with `uv run --project skills/ci python skills/ci/<gate>.py ...`
+# (see skills/ci/README.md).
+
+on:
+  pull_request:
+    paths: ["skills/skills/**"]
+  push:
+    branches: [main]
+    paths: ["skills/skills/**"]
+    tags: ["*/v[0-9]+.[0-9]+.[0-9]+"]
+
+jobs:
+  detect-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: astral-sh/setup-uv@v3
+      - name: detect-release
+        run: |
+          uv run --project skills/ci python skills/ci/detect_release.py \
+            --base "${{ github.event.pull_request.base.sha || 'HEAD~1' }}" \
+            --head "${{ github.event.pull_request.head.sha || 'HEAD' }}"
+
+  lint:
+    needs: detect-release
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        skill: [ticket-review]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: lint ${{ matrix.skill }}
+        run: |
+          uv run --project skills/ci python skills/ci/lint.py skills/skills/${{ matrix.skill }}
+
+  version-check:
+    needs: detect-release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        skill: [ticket-review]
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: astral-sh/setup-uv@v3
+      - name: version-check ${{ matrix.skill }}
+        run: |
+          uv run --project skills/ci python skills/ci/version_check.py skills/skills/${{ matrix.skill }}
+
+  # triggers / safety / e2e replay tests/*.yaml and tests/*.mock.yaml via the
+  # eval harness (`de-eval`, DESIGN.md S5). That harness is built in a later
+  # milestone (M4) — these steps are wired into gate order now (per spec:
+  # "invoke ... MUST be marked continue-on-error: false") but each step's
+  # `if:` is guarded off until eval/ exists, so the pipeline doesn't red
+  # until M4 lands. Flip the `if:` to unconditional once `eval/pyproject.toml`
+  # is committed.
+  triggers:
+    needs: [lint, version-check]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        skill: [ticket-review]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      # M4 guard: de-eval lands in a later milestone; skip until eval/ exists.
+      - name: triggers ${{ matrix.skill }}
+        if: hashFiles('eval/pyproject.toml') != ''
+        continue-on-error: false
+        run: |
+          uv run --project ../eval de-eval triggers skills/${{ matrix.skill }}
+
+  safety:
+    needs: [lint, version-check]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        skill: [ticket-review]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      # M4 guard: de-eval lands in a later milestone; skip until eval/ exists.
+      - name: safety ${{ matrix.skill }}
+        if: hashFiles('eval/pyproject.toml') != ''
+        continue-on-error: false
+        run: |
+          uv run --project ../eval de-eval safety skills/${{ matrix.skill }}
+
+  e2e:
+    needs: [triggers, safety]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        skill: [ticket-review]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      # M4 guard: de-eval lands in a later milestone; skip until eval/ exists.
+      - name: e2e ${{ matrix.skill }}
+        if: hashFiles('eval/pyproject.toml') != ''
+        continue-on-error: false
+        run: |
+          uv run --project ../eval de-eval e2e skills/${{ matrix.skill }}
+
+  auto-tag:
+    needs: [e2e]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        skill: [ticket-review]
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0, token: ${{ secrets.RELEASE_BOT_TOKEN }} }
+      - uses: astral-sh/setup-uv@v3
+      - name: resolve released version
+        id: ver
+        run: |
+          uv run --project skills/ci python skills/ci/version_check.py skills/skills/${{ matrix.skill }}
+          version=$(python3 -c "
+          import re
+          text = open('skills/skills/${{ matrix.skill }}/SKILL.md').read()
+          m = re.search(r'^version:\s*(\S+)\s*$', text, re.MULTILINE)
+          print(m.group(1))
+          ")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: create version tag + move latest
+        run: |
+          tag="${{ matrix.skill }}/v${{ steps.ver.outputs.version }}"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "tag $tag already exists, refusing to move it" >&2
+            exit 1
+          fi
+          git tag -a "$tag" -m "release ${{ matrix.skill }} v${{ steps.ver.outputs.version }}"
+          git push origin "$tag"
+          git tag -f "${{ matrix.skill }}/latest" "$tag"
+          git push -f origin "${{ matrix.skill }}/latest"
