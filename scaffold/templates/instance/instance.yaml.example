@@ -1,0 +1,117 @@
+# instance.yaml — DE instance configuration
+# Schema version 1 (required).
+# Full field reference: docs/10-scaffold/instance-yaml-spec.md
+
+schema_version: 1
+
+# === IDENTITY (required) ===
+identity:
+  # Unique instance identifier: format convention is DE-<ORG>-<TEAM>-<NNN>
+  id: DE-ACME-EXAMPLE-001
+  # Human-readable team name
+  team: acme-example
+  # Optional description of this team's scope and mission
+  description: "Digital Employee for the Acme Corp example team"
+
+# === SCOPE (required) — the security boundary ===
+# Strictly list the service catalog paths this DE may touch.
+# Any request outside this list is declined and escalated.
+scope:
+  service_catalog:
+    - acme.storefront.example
+
+# === BASE (required) — where to fetch the scaffold ===
+base:
+  # Version: either a semver like "0.1.0" (pin) or "latest" (track HEAD)
+  version: "0.1.0"
+  # Optional: only used when version: latest
+  # branch: main
+  # Optional: override the scaffold repo location (demo uses file:// paths)
+  repo: "file://../../scaffold"
+
+# === LAYERS (optional) — shared team-group configuration ===
+# Omitted for this example. See docs/10-scaffold/instance-yaml-spec.md §5 for details.
+# layers: []
+
+# === SETTINGS (optional) — Claude Code permissions and hooks ===
+settings:
+  permissions:
+    # Additional patterns to allow (appended to base allow list)
+    extra_allow: []
+    # Additional patterns to deny (appended to base deny list; you can always deny more)
+    extra_deny: []
+    # Additional patterns to ask for confirmation
+    extra_ask: []
+    # Permission mode: must be >= as restrictive as base (strictness: plan > default > acceptEdits > bypassPermissions)
+    default_mode: default
+  # Additional environment variables (base keys are immutable)
+  env: {}
+  # Additional hook groups (appended after base hooks; base hooks cannot be removed)
+  hooks: {}
+
+# === MCP (optional) — additional MCP servers ===
+mcp:
+  extra_servers: {}
+  enable_project_servers: []
+  # Cannot disable the protected escalation server
+  disable_servers: []
+
+# === ESCALATION (optional) — where to route escalations ===
+escalation:
+  enabled: true
+  # List of mentor emails (receive escalation notifications)
+  mentor_emails: []
+  show_event_id: true
+  event_store: "/tmp/de-agent-escalations/events.jsonl"
+  dedup_window_seconds: 300
+  guard:
+    enabled: true
+    max_tool_failures: 3
+    max_repeated_attempts: 3
+
+# === CLAUDE_MD (optional) — extra rules for the system prompt ===
+claude_md:
+  extra_rules: ""
+
+# === KB (optional) — knowledge base configuration ===
+kb:
+  # Path to the team's KB index (relative to runtime/kb/)
+  team_index: kb/team/_index.md
+  # Optional: external read-only wiki refs (git-fetched at build time)
+  live_refs: []
+
+# === BRIDGE (optional) — chat-platform integration ===
+bridge:
+  enabled: false
+  # repo: https://github.com/acme-example/chat-bridge.git
+  # version: main
+  # chat_platform:
+  #   mode: "webhook"
+  #   relay_url: ""
+  #   api_base_url: "http://localhost:9100"
+  # server:
+  #   host: "0.0.0.0"
+  #   port: 8000
+  # auth:
+  #   allowed_users: []  # Required non-empty when bridge.enabled: true
+  #   admin_users: []    # Required non-empty when bridge.enabled: true
+  # sessions:
+  #   idle_timeout_minutes: 30
+  #   workspace_root: ""
+  #   runtime_snapshots_root: ""
+  #   max_sessions: 20
+  # agent:
+  #   backend: "claude"
+  #   extra_args: []
+  #   response_timeout_seconds: 120
+  #   permission_handling: "skip"
+  # memory:
+  #   enabled: true
+  #   context_max_chars: 2000
+  #   context_max_results: 5
+
+# === ADVANCED (optional) — model and output configuration ===
+advanced:
+  model: null
+  output_style: null
+  worktree: {}

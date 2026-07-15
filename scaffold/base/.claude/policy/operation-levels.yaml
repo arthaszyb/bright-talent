@@ -1,0 +1,82 @@
+# operation-levels.yaml — REQUIRE_APPROVAL rules for Level-2/3 operations
+rules:
+  - id: scale-requires-approval
+    description: "Scaling replicas requires human confirmation"
+    match:
+      tool: "Bash"
+      pattern: "kubectl\\s+scale\\s+.*--replicas"
+    verdict: REQUIRE_APPROVAL
+    message: "Scaling is a Level-3 operation requiring human confirmation"
+    prompt_hint: "Before scaling, calculate and show the blast radius (resource cost, latency impact). Then wait for human confirmation."
+
+  - id: rollout-restart-requires-approval
+    description: "Restarting a workload requires human confirmation"
+    match:
+      tool: "Bash"
+      pattern: "kubectl\\s+rollout\\s+restart"
+    verdict: REQUIRE_APPROVAL
+    message: "Workload restart is a Level-3 operation requiring human confirmation"
+    prompt_hint: "Before restarting, verify the service can tolerate a brief outage. Show the pod termination grace period and wait for human confirmation."
+
+  - id: pod-deletion-requires-approval
+    description: "Deleting a pod requires human confirmation"
+    match:
+      tool: "Bash"
+      pattern: "kubectl\\s+delete\\s+pod"
+    verdict: REQUIRE_APPROVAL
+    message: "Pod deletion is a Level-3 operation requiring human confirmation"
+    prompt_hint: "Before deleting a pod, verify that the workload can reschedule and that no in-flight work will be lost. Wait for human confirmation."
+
+  - id: service-shutdown-requires-approval
+    description: "Shutting down a service requires human confirmation"
+    match:
+      tool: "Bash"
+      pattern: "systemctl\\s+stop\\s+\\w+|service\\s+\\w+\\s+stop"
+    verdict: REQUIRE_APPROVAL
+    message: "Service shutdown is a Level-3 operation requiring human confirmation"
+    prompt_hint: "Before stopping a service, identify dependent services and notify stakeholders. Wait for human confirmation."
+
+  - id: database-migration-requires-approval
+    description: "Database schema migrations require human confirmation"
+    match:
+      tool: "Bash"
+      pattern: "migrate|ALTER\\s+TABLE|DROP\\s+TABLE|TRUNCATE"
+    verdict: REQUIRE_APPROVAL
+    message: "Database migrations are Level-3 operations requiring human confirmation"
+    prompt_hint: "Before running a database migration, provide a rollback plan and a data backup confirmation. Wait for human approval."
+
+  - id: deploy-production-requires-approval
+    description: "Production deployments require human confirmation"
+    match:
+      tool: "Bash"
+      pattern: "deploy.*prod|kubectl.*apply.*-f.*prod|terraform.*apply.*prod"
+    verdict: REQUIRE_APPROVAL
+    message: "Production deployments are Level-3 operations requiring human confirmation"
+    prompt_hint: "Before deploying to production, show the change diff, affected services, and deployment plan. Wait for human confirmation."
+
+  - id: firewall-change-requires-approval
+    description: "Firewall rule changes require human confirmation"
+    match:
+      tool: "Bash"
+      pattern: "iptables|ufw\\s+allow|ufw\\s+deny|gcloud\\s+compute\\s+firewall"
+    verdict: REQUIRE_APPROVAL
+    message: "Firewall changes are Level-2 operations requiring human confirmation"
+    prompt_hint: "Before changing firewall rules, document the impact on service connectivity and get human approval."
+
+  - id: cert-rotation-requires-approval
+    description: "Certificate rotations require human confirmation"
+    match:
+      tool: "Bash"
+      pattern: "certbot|acme|cert-renew|rotate.*cert"
+    verdict: REQUIRE_APPROVAL
+    message: "Certificate rotations are Level-2 operations requiring human confirmation"
+    prompt_hint: "Before rotating certificates, verify the rollout plan and get human approval."
+
+  - id: network-partition-requires-approval
+    description: "Network isolation changes require human confirmation"
+    match:
+      tool: "Bash"
+      pattern: "kubectl.*network.*policy|iptables.*-I.*FORWARD"
+    verdict: REQUIRE_APPROVAL
+    message: "Network isolation changes are Level-3 operations requiring human confirmation"
+    prompt_hint: "Network policy changes can break inter-service communication. Show the impact analysis and wait for approval."

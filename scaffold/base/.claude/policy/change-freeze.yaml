@@ -1,0 +1,25 @@
+# change-freeze.yaml — Team-declared time-based freezes (empty by default)
+#
+# Teams add time-based freeze rules in their own overlays. Example:
+#
+#   - id: weekend-freeze
+#     description: "Freeze deploys over the weekend"
+#     match:
+#       tool: "Bash"
+#       pattern: ".*deploy.*"
+#     condition: "is_weekend"
+#     verdict: DENY
+#     message: "Deploys are frozen on weekends"
+#     prompt_hint: "Deploys are frozen on weekends — schedule this deployment for a weekday change window."
+#
+#   - id: end-of-quarter-freeze
+#     description: "Freeze major changes at end of quarter"
+#     match:
+#       tool: "Bash"
+#       pattern: ".*migrate|schema.*change"
+#     condition: "is_end_of_quarter"
+#     verdict: DENY
+#     message: "Schema changes are frozen during quarter-end close"
+#     prompt_hint: "Schema changes are frozen during quarter-end. Schedule this for the next quarter."
+
+rules: []

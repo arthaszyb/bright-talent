@@ -1,0 +1,82 @@
+# sensitive-data.yaml — DENY rules for credential and secret exposure
+rules:
+  - id: no-output-passwords
+    description: "Block commands that would print password material"
+    match:
+      tool: "Bash"
+      pattern: "(cat|echo|print|less|more|tail)\\s+.*password"
+    verdict: DENY
+    message: "Printing password content is prohibited"
+    prompt_hint: "Never run a command that outputs password files or password variables in plaintext."
+
+  - id: no-env-dump
+    description: "Block full environment-variable dumps"
+    match:
+      tool: "Bash"
+      pattern: "^(env|printenv|export\\s+-p|set)$"
+    verdict: DENY
+    message: "Dumping the full environment may leak secrets stored in variables"
+    prompt_hint: "Never run env, printenv, export -p, or set with no arguments — they leak sensitive environment values."
+
+  - id: no-read-ssh-keys
+    description: "Block reading SSH private keys"
+    match:
+      tool: "Read"
+      pattern: "~?\\.ssh/(id_|private|.*private)"
+    verdict: DENY
+    message: "SSH private keys must not be read or displayed"
+    prompt_hint: "Never read SSH private keys from ~/.ssh/ — they are private credentials."
+
+  - id: no-read-env-files
+    description: "Block reading .env and secrets files"
+    match:
+      tool: "Read"
+      pattern: "(\\.env|\\.env\\..*|secrets|credentials|\\.pass)"
+    verdict: DENY
+    message: "Environment files and secrets files must not be read"
+    prompt_hint: "Never read .env, .env.* or other secrets files directly — use environment variable access instead."
+
+  - id: no-output-secrets-file
+    description: "Block outputting entire secrets files"
+    match:
+      tool: "Bash"
+      pattern: "(cat|echo|grep|less)\\s+.*/(secrets|credentials|\\.env|\\.pass)"
+    verdict: DENY
+    message: "Secrets files must not be output in plaintext"
+    prompt_hint: "Never output the contents of secrets files — they contain credentials that must remain private."
+
+  - id: no-grep-passwords
+    description: "Block grep/search for passwords in files"
+    match:
+      tool: "Bash"
+      pattern: "grep.*-r\\s+(password|secret|apikey|token)\\s+"
+    verdict: DENY
+    message: "Bulk password/secret search could leak credentials"
+    prompt_hint: "Never run grep -r for passwords/secrets across the filesystem — this can inadvertently display credentials."
+
+  - id: no-decode-jwt
+    description: "Block decoding JWT tokens (common in SENSITIVE data)"
+    match:
+      tool: "Bash"
+      pattern: "(base64|jq).*decode.*ey[A-Za-z0-9_-]+\\.ey[A-Za-z0-9_-]+"
+    verdict: DENY
+    message: "Decoding JWT tokens may expose sensitive claims"
+    prompt_hint: "Do not decode or inspect JWT tokens — they may contain sensitive user data or secrets."
+
+  - id: no-read-aws-creds
+    description: "Block reading AWS credentials files"
+    match:
+      tool: "Read"
+      pattern: "~?\\.aws/(credentials|config)"
+    verdict: DENY
+    message: "AWS credentials files must not be accessed"
+    prompt_hint: "Never read ~/.aws/credentials or ~/.aws/config — they contain sensitive authentication material."
+
+  - id: no-output-db-password
+    description: "Block commands that output database passwords"
+    match:
+      tool: "Bash"
+      pattern: "(psql|mysql|mongo).*-p|echo.*DB_PASSWORD"
+    verdict: DENY
+    message: "Database passwords must not be displayed"
+    prompt_hint: "Never output database connection strings or passwords — pass them via environment variables instead."

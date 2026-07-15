@@ -1,0 +1,64 @@
+# security.yaml — Hard DENY rules for prohibited operations
+rules:
+  - id: no-delete-namespace
+    description: "Block deletion of a Kubernetes namespace"
+    match:
+      tool: "Bash"
+      pattern: "kubectl\\s+delete\\s+(ns|namespace)"
+    verdict: DENY
+    message: "Namespace deletion is a Level-4 prohibited operation"
+    prompt_hint: "Never run kubectl delete namespace/ns — this is a Level-4 prohibited operation."
+
+  - id: no-rm-rf-root
+    description: "Block deletion of root or critical system directories"
+    match:
+      tool: "Bash"
+      pattern: "rm\\s+-rf\\s+(/|/etc|/var|/usr|/home|~)"
+    verdict: DENY
+    message: "Deletion of critical system directories is prohibited"
+    prompt_hint: "Never run rm -rf / or rm -rf with / ~ or other system root directories — this could destroy the entire system."
+
+  - id: no-mkfs
+    description: "Block filesystem formatting commands"
+    match:
+      tool: "Bash"
+      pattern: "mkfs\\s+|mkfs\\."
+    verdict: DENY
+    message: "Filesystem formatting is a Level-4 prohibited operation"
+    prompt_hint: "Never run mkfs or mkfs.* commands — these destroy all data on a partition."
+
+  - id: no-dd-to-devices
+    description: "Block dd writes to block devices"
+    match:
+      tool: "Bash"
+      pattern: "dd\\s+if=.*of=(/dev/|/proc/)"
+    verdict: DENY
+    message: "Writing to device files with dd is a Level-4 prohibited operation"
+    prompt_hint: "Never use dd to write directly to /dev/ or /proc/ — this can corrupt the system."
+
+  - id: no-chmod-666-root
+    description: "Block chmod that makes critical files world-writable"
+    match:
+      tool: "Bash"
+      pattern: "chmod\\s+-R\\s+777\\s+/|chmod\\s+777\\s+(passwd|shadow|sudoers)"
+    verdict: DENY
+    message: "Making critical files world-writable is prohibited"
+    prompt_hint: "Never use chmod 777 or chmod -R 777 on system directories — this creates critical security vulnerabilities."
+
+  - id: no-curl-pipe-shell
+    description: "Block curl|sh or wget|sh patterns (code injection)"
+    match:
+      tool: "Bash"
+      pattern: "(curl|wget).*\\|.*sh"
+    verdict: DENY
+    message: "Piping remote scripts directly to shell is a critical security risk"
+    prompt_hint: "Never run curl|sh or wget|sh — always download, review, and then execute code explicitly."
+
+  - id: no-kernel-panic
+    description: "Block kernel panic triggers"
+    match:
+      tool: "Bash"
+      pattern: "echo\\s+['\\\"]?c\\s*['\\\"]?\\s*>\\s*/proc/sysrq-trigger|sysctl\\s+-w\\s+kernel\\.panic"
+    verdict: DENY
+    message: "Kernel panic is a Level-4 prohibited operation"
+    prompt_hint: "Never trigger a kernel panic via sysrq or sysctl kernel.panic settings."

@@ -1,0 +1,46 @@
+{
+  "services": [
+    {
+      "path": "acme.storefront.checkout",
+      "owner_team": "acme-checkout-sre",
+      "oncall": "acme-checkout-sre@acme.example",
+      "description": "Checkout service handling payment processing and order finalization"
+    },
+    {
+      "path": "acme.storefront.cart",
+      "owner_team": "acme-checkout-sre",
+      "oncall": "acme-checkout-sre@acme.example",
+      "description": "Shopping cart service for item management and checkout workflow"
+    },
+    {
+      "path": "acme.storefront.search",
+      "owner_team": "acme-search-sre",
+      "oncall": "acme-search-sre@acme.example",
+      "description": "Full-text search service for product discovery and catalog browsing"
+    },
+    {
+      "path": "acme.storefront.payments",
+      "owner_team": "acme-payments-sre",
+      "oncall": "acme-payments-sre@acme.example",
+      "description": "Payment gateway integration and transaction processing"
+    },
+    {
+      "path": "acme.logistics.warehouse",
+      "owner_team": "acme-logistics-sre",
+      "oncall": "acme-logistics-sre@acme.example",
+      "description": "Warehouse inventory management and fulfillment coordination"
+    },
+    {
+      "path": "acme.logistics.shipping",
+      "owner_team": "acme-logistics-sre",
+      "oncall": "acme-logistics-sre@acme.example",
+      "description": "Shipping label generation and carrier integration service"
+    },
+    {
+      "path": "acme.logistics.tracking",
+      "owner_team": "acme-logistics-sre",
+      "oncall": "acme-logistics-sre@acme.example",
+      "description": "Order tracking and shipment status visibility service"
+    }
+  ]
+}

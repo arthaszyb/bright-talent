@@ -1,0 +1,13 @@
+.env
+*.pyc
+__pycache__/
+.venv/
+node_modules/
+runtime/
+.base-cache/
+.skills-cache/
+.kb-cache/
+log/
+*.egg-info/
+.commands.jsonl
+transcript.jsonl

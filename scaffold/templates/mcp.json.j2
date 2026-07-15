@@ -1,0 +1,22 @@
+{# mcp.json.j2 — MCP servers for a DE runtime
+   Variable contract (StrictUndefined):
+   - extra_servers: dict (additional MCP server configs, may be empty)
+#}
+{
+  "mcpServers": {
+    "de-agent-escalate": {
+      "command": "python3",
+      "args": [
+        "$CLAUDE_PROJECT_DIR/.claude/tools/de-agent-escalate.py"
+      ]
+    }
+{% if extra_servers %}
+    {%- for name, config in extra_servers.items() %},
+    "{{ name }}": {{ config | tojson }}
+    {%- endfor %}
+{% endif %}
+  },
+  "enabledMcpjsonServers": [
+    "de-agent-escalate"
+  ]
+}

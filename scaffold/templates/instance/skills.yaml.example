@@ -1,0 +1,19 @@
+# skills.yaml — Skill dependencies for this DE instance
+# This file is validated and locked at build time (see docs/20-instance/skills-yaml-spec.md).
+
+# Skill registries to search. Each registry is a git repo containing skills.
+registries:
+  - name: local
+    type: file
+    # In this demo, local skills are under /skills/skills/
+    path: ../../skills
+
+# Declared skill dependencies.
+# Format: skill_name@registry (e.g., ticket-review@local).
+# The builder resolves these against the registries, pins them to a commit,
+# and installs them into runtime/.claude/skills/ at build time.
+dependencies: {}
+
+# Example (uncomment to use):
+# dependencies:
+#   ticket-review@local: {}

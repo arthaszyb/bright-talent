@@ -1,0 +1,38 @@
+{# editor-settings.json.j2 — Claude Code settings for editor mode (restricted)
+   Variable contract (StrictUndefined):
+   - empty (no variables; uses fixed policy for config editing)
+#}
+{
+  "version": "0.1",
+  "workingDirectory": ".",
+
+  "permissions": {
+    "defaultMode": "plan",
+    "allow": [
+      "Read"
+    ],
+    "deny": [
+      "Bash(*)",
+      "Edit(/.*/.claude/*)",
+      "Edit(/.*/.base-cache/*)",
+      "Edit(/.*/.layers-cache/*)",
+      "Edit(/.*/.skills-cache/*)",
+      "Edit(/.*/.github/workflows/*)",
+      "Edit(/.*Makefile)",
+      "Edit(/.*VERSION)",
+      "Edit(/.*de)",
+      "WebFetch",
+      "WebSearch"
+    ],
+    "ask": [
+      "Edit(instance.yaml)",
+      "Edit(.env)",
+      "Edit(skills.yaml)",
+      "Edit(kb/team/*)"
+    ]
+  },
+
+  "hooks": {},
+
+  "env": {}
+}

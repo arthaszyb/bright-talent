@@ -1,0 +1,132 @@
+{# settings.json.j2 — Claude Code settings for a DE runtime
+   Variable contract (StrictUndefined):
+   - default_mode: str (permission mode, monotonically restricted)
+   - extra_allow: list of str (additional allowed patterns)
+   - extra_deny: list of str (additional denied patterns)
+   - extra_ask: list of str (additional ask patterns)
+   - env_vars: dict str→str (environment variable overrides)
+   - extra_rules: str (may be empty)
+#}
+{
+  "version": "0.1",
+  "workingDirectory": "./runtime",
+
+  "permissions": {
+    "defaultMode": "{{ default_mode | default('acceptEdits', true) }}",
+    "allow": [
+      "Read",
+      "Grep",
+      "Glob",
+      "Skill",
+      "mcp__de-agent-escalate__escalate"
+{% if extra_allow %}
+      {%- for pattern in extra_allow %},
+      "{{ pattern }}"
+      {%- endfor %}
+{% endif %}
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(mkfs*)",
+      "Bash(dd if=*)",
+      "Bash(*|rm -rf*)",
+      "Bash(*|mkfs*)",
+      "Bash(curl*|sh)",
+      "Bash(wget*|sh)",
+      "Edit(/.*settings.json)",
+      "Edit(/.*CLAUDE.md)",
+      "Edit(/.*/.claude/hooks/*)",
+      "Edit(/.*/.claude/policy/*)"
+{% if extra_deny %}
+      {%- for pattern in extra_deny %},
+      "{{ pattern }}"
+      {%- endfor %}
+{% endif %}
+    ],
+    "ask": [
+      "Bash(kubectl *)",
+      "Bash(sudo *)"
+{% if extra_ask %}
+      {%- for pattern in extra_ask %},
+      "{{ pattern }}"
+      {%- endfor %}
+{% endif %}
+    ]
+  },
+
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/input-sanitizer.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/injection-detector.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/context-isolator.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/skill-gate.py"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/escalation-guard.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/result-sanitizer.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/escalation-guard.py"
+          }
+        ]
+      }
+    ]
+  },
+
+  "env": {
+    "CHANGE_GATEWAY_BASE": "http://localhost:8801"
+{% if env_vars %}
+    {%- for key, value in env_vars.items() %},
+    "{{ key }}": "{{ value }}"
+    {%- endfor %}
+{% endif %}
+  }
+}

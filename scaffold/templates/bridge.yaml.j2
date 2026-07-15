@@ -1,0 +1,69 @@
+{# bridge.yaml.j2 — Bridge configuration for chat-platform integration
+   Variable contract (StrictUndefined):
+   - bridge: dict with keys: chat_platform (mode, relay_url, api_base_url, working_card_enabled),
+             server (host, port), auth (allowed_users, admin_users),
+             sessions (idle_timeout_minutes, max_sessions, workspace_root, runtime_snapshots_root, sandbox_backend),
+             agent (backend, extra_args, response_timeout_seconds, permission_handling),
+             memory (enabled, context_max_chars, context_max_results)
+   - env: dict for environment variable references like {{ env.VAR }}
+#}
+# Bridge configuration for chat-platform integration
+# Secrets are injected as environment variables at deploy time (see instance.yaml bridge.enabled and §10 of bridge config-spec.md)
+
+chat:
+  app_id: "{{ env.CHATOPS_APP_ID | default('demo-app-id', true) }}"
+  app_secret: "{{ env.CHATOPS_APP_SECRET | default('sk-demo-placeholder', true) }}"
+  signing_secret: "{{ env.CHATOPS_SIGNING_SECRET | default('sk-demo-placeholder', true) }}"
+  api_base_url: "{{ bridge.chat_platform.api_base_url | default('http://localhost:9100', true) }}"
+  bot_id: "{{ bridge.chat_platform.bot_id | default('demo-bot', true) }}"
+  mode: "{{ bridge.chat_platform.mode | default('webhook', true) }}"
+  relay_url: "{{ bridge.chat_platform.relay_url | default('', true) }}"
+
+server:
+  host: "{{ bridge.server.host | default('0.0.0.0', true) }}"
+  port: {{ bridge.server.port | default(8000, true) }}
+  debug: false
+
+agent:
+  executable: "claude"
+  extra_args: {{ bridge.agent.extra_args | default([], true) | tojson }}
+  response_timeout_seconds: {{ bridge.agent.response_timeout_seconds | default(120, true) }}
+  default_permission_mode: "{{ bridge.agent.permission_handling | default('skip', true) | replace('skip', 'bypassPermissions') | replace('auto', 'acceptEdits') }}"
+  env:
+    CHANGE_GATEWAY_BASE: "http://localhost:8801"
+
+sessions:
+  idle_timeout_minutes: {{ bridge.sessions.idle_timeout_minutes | default(30, true) }}
+  default_working_directory: "./runtime"
+  workspace_root: "{{ bridge.sessions.workspace_root | default('', true) }}"
+  runtime_snapshots_root: "{{ bridge.sessions.runtime_snapshots_root | default('', true) }}"
+  max_sessions: {{ bridge.sessions.max_sessions | default(20, true) }}
+  data_dir: "~/.claude-bridge"
+  state_file: ""
+
+auth:
+  allowed_users:
+{% for user in bridge.auth.allowed_users %}
+    - "{{ user }}"
+{% endfor %}
+  admin_users:
+{% for admin in bridge.auth.admin_users %}
+    - "{{ admin }}"
+{% endfor %}
+  no_mention_groups: []
+
+memory:
+  enabled: {{ bridge.memory.enabled | default(true, true) | lower }}
+  context_min_chars: 5
+  context_max_chars: {{ bridge.memory.context_max_chars | default(2000, true) }}
+  context_max_results: {{ bridge.memory.context_max_results | default(5, true) }}
+
+dream:
+  enabled: true
+  min_hours: 24
+  min_entries: 10
+  check_interval_minutes: 60
+  timeout_seconds: 600
+  model: ""
+
+slash_commands: {}
