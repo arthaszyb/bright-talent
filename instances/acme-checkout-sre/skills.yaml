@@ -1,0 +1,7 @@
+registries:
+  local:
+    url: "file://../../skills"
+
+default_registry: local
+
+dependencies: {}

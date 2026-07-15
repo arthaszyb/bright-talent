@@ -1,0 +1,70 @@
+schema_version: 1
+
+identity:
+  id: DE-ACME-CHECKOUT-001
+  team: acme-checkout-sre
+  description: "Digital Employee for the Acme Corp storefront checkout SRE team"
+
+scope:
+  service_catalog:
+    - acme.storefront.checkout
+    - acme.storefront.cart
+
+base:
+  version: "0.1.0"
+  repo: "file://../../scaffold"
+
+settings:
+  permissions:
+    extra_allow: []
+    extra_deny: []
+    extra_ask: []
+    default_mode: default
+  env: {}
+  hooks: {}
+
+mcp:
+  extra_servers: {}
+  enable_project_servers: []
+  disable_servers: []
+
+escalation:
+  enabled: true
+  mentor_emails:
+    - mentor-one@acme.example
+    - mentor-two@acme.example
+  show_event_id: true
+  event_store: "/tmp/de-agent-escalations/events.jsonl"
+  dedup_window_seconds: 300
+  guard:
+    enabled: true
+    max_tool_failures: 3
+    max_repeated_attempts: 3
+
+claude_md:
+  extra_rules: |
+    ## Three-Step Working Protocol
+
+    1. **Confirm the need**: Before taking any action, ensure you understand what the user is asking for and why. Ask clarifying questions if the intent is unclear.
+    2. **Select the skill**: Once the need is clear, identify the appropriate skill or runbook that applies to this situation.
+    3. **Execute the skill**: Follow the runbook precisely. For changes, never execute directly—always propose via the Change Gateway.
+
+    ## Change Gateway Policy
+
+    All proposed changes go through the Change Gateway at http://localhost:8801. The DE analyzes and proposes changes, but never executes them directly. The Change Gateway:
+    - Accepts proposals via POST /changes
+    - Evaluates risk using the mentors' thresholds
+    - Routes to mentors for final approval
+    - Logs all change events for audit
+
+kb:
+  team_index: kb/team/_index.md
+  live_refs: []
+
+bridge:
+  enabled: false
+
+advanced:
+  model: null
+  output_style: null
+  worktree: {}
