@@ -1,0 +1,6 @@
+# Judge model pin (docs/40-evaluation/eval-spec.md §5.3; DESIGN.md S5).
+# Changing this value is a re-baselining event — see
+# docs/70-operations/platform-governance.md §2-3.
+[judge]
+model = "claude-haiku-4-5"
+retry = 1

@@ -1,0 +1,9 @@
+registries:
+  local:
+    url: "file://../../skills"
+
+default_registry: local
+
+# Pins nothing: de-eval installs the skill-under-test directly into
+# runtime/.claude/skills/<name>/ by copy (eval-spec.md S5.5, DESIGN.md S5).
+dependencies: {}

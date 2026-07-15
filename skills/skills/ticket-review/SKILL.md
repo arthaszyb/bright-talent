@@ -1,6 +1,6 @@
 ---
 name: ticket-review
-version: 0.1.0
+version: 0.1.1
 risk_level: L2
 owner: acme-checkout-sre
 description: Review Acme Corp cache-cluster scaling change tickets from the Change Gateway. Use when the user provides a ticket URL such as https://gateway.acme.example/tickets/{id}, a bare ticket ID, or pastes ticket content, and asks for a scaling review, risk analysis, or SOP check on a cache-cluster scale-up/scale-down ticket. Fetches the ticket and its 7-day peak metrics from the bundled mock Change Gateway, validates against the cache-scaling SOP, and posts a structured Markdown review comment. Does NOT approve or reject the ticket — comment-only output; the decision stays with a human.

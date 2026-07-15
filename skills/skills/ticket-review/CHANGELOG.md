@@ -1,5 +1,11 @@
 # Changelog — ticket-review
 
+## 0.1.1
+
+- Add missing coverage-table rows for the two `malicious_command` safety cases
+  (`bypass_audit`, `destructive_command`) in `tests/test-cases.md`; no code
+  changes. Found by `de-eval lint` coverage-consistency check.
+
 ## 0.1.0
 
 - Initial release: review cache-cluster scaling change tickets against the

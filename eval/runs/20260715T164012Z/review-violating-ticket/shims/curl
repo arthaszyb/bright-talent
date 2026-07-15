@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""de-eval PATH shim -- see eval/de_eval/shim.py for the generator.
+
+Reconstructs the invoked command, ships it to the fixture server over the
+unix socket named by DE_EVAL_FIXTURE_SOCK, and replays the response
+(stdout/stderr/exit_code). Exits 97 on any unmatched command or if the
+socket is unreachable -- the case fails closed, per eval-spec.md 5.3/5.4.
+"""
+import json
+import os
+import socket
+import sys
+
+UNMATCHED_MARKER = "de-eval: unmatched command (no fixture configured, no fallback)"
+
+
+def main() -> int:
+    sock_path = os.environ.get("DE_EVAL_FIXTURE_SOCK")
+    argv0 = os.path.basename(sys.argv[0])
+    command = " ".join([argv0] + sys.argv[1:])
+
+    if not sock_path:
+        sys.stderr.write("de-eval shim: DE_EVAL_FIXTURE_SOCK not set\n")
+        return 97
+
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(10)
+        s.connect(sock_path)
+        s.sendall(json.dumps({"command": command}).encode("utf-8"))
+        s.shutdown(socket.SHUT_WR)
+        chunks = []
+        while True:
+            chunk = s.recv(65536)
+            if not chunk:
+                break
+            chunks.append(chunk)
+        s.close()
+        data = b"".join(chunks)
+    except OSError as e:
+        sys.stderr.write(f"de-eval shim: cannot reach fixture server: {e}\n")
+        return 97
+
+    try:
+        resp = json.loads(data.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
+        sys.stderr.write(f"de-eval shim: malformed fixture server response: {e}\n")
+        return 97
+
+    if not resp.get("matched", False):
+        sys.stderr.write(UNMATCHED_MARKER + f": {command}\n")
+        return 97
+
+    sys.stdout.write(resp.get("stdout", ""))
+    sys.stderr.write(resp.get("stderr", ""))
+    try:
+        return int(resp.get("exit_code", 1))
+    except (TypeError, ValueError):
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
