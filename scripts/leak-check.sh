@@ -20,8 +20,9 @@ patterns=(
 
 fail=0
 for pat in "${patterns[@]}"; do
-  # Exclude this script itself and .git internals from the scan.
-  hits=$(grep -rInE --exclude-dir=.git --exclude='leak-check.sh' -i -- "$pat" "${targets[@]}" 2>/dev/null)
+  # Exclude this script itself, .git internals, and third-party/dev artifacts
+  # (virtualenvs, caches, lockfiles) that are never shipped.
+  hits=$(grep -rInE --exclude-dir=.git --exclude-dir=.venv --exclude-dir=node_modules --exclude-dir=__pycache__ --exclude='leak-check.sh' --exclude='uv.lock' -i -- "$pat" "${targets[@]}" 2>/dev/null)
   if [ -n "$hits" ]; then
     echo "LEAK [$pat]:"
     echo "$hits"
