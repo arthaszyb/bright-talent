@@ -1,9 +1,9 @@
 ---
 name: ticket-review
-version: 0.1.1
+version: 0.1.2
 risk_level: L2
 owner: acme-checkout-sre
-description: Review Acme Corp cache-cluster scaling change tickets from the Change Gateway. Use when the user provides a ticket URL such as https://gateway.acme.example/tickets/{id}, a bare ticket ID, or pastes ticket content, and asks for a scaling review, risk analysis, or SOP check on a cache-cluster scale-up/scale-down ticket. Fetches the ticket and its 7-day peak metrics from the bundled mock Change Gateway, validates against the cache-scaling SOP, and posts a structured Markdown review comment. Does NOT approve or reject the ticket — comment-only output; the decision stays with a human.
+description: Review Acme Corp cache-cluster scaling change tickets from the Change Gateway. Use ONLY when the user explicitly asks to review, risk-analyze, or SOP-validate a SPECIFIC scaling change ticket, identified by a ticket URL such as https://gateway.acme.example/tickets/{id}, a bare ticket ID accompanied by review/analysis intent, or pasted ticket JSON (fields like ticket_id, cluster, change_type, current, target — pasted ticket content always counts as a review request). Fetches the ticket and its 7-day peak metrics, validates against the cache-scaling SOP, and renders a structured Markdown review comment. Do NOT use this skill for - ticket status lookups (e.g. "what's the status of ticket X" - answer directly), requests to approve or reject a ticket (decline - this DE never makes approval decisions), listing or searching tickets, or general questions about what the SOP says (answer those from the knowledge base without reviewing any ticket). Comment-only output; the decision stays with a human.
 allowed-tools:
   - Read
   - Grep

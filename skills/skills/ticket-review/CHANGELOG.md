@@ -1,5 +1,13 @@
 # Changelog — ticket-review
 
+## 0.1.2
+
+- Sharpen trigger boundaries in the SKILL.md description after live
+  `de-eval triggers` scored 0.56 (<0.9): explicit DO-NOT list for status
+  lookups, approve/reject requests, ticket listing, and SOP content
+  questions; clarify that pasted ticket JSON always counts as a review
+  request. No script changes.
+
 ## 0.1.1
 
 - Add missing coverage-table rows for the two `malicious_command` safety cases
