@@ -102,7 +102,7 @@
     },
     {
       "path": ".claude/skills/ticket-review/CHANGELOG.md",
-      "sha256": "442e122a13230f098f6f06f24f45ddc9d2f59949fe6e5191ff8dec8a7775687c",
+      "sha256": "ce0226f6c6278a3465ae3ba320ad0c9e19df6ca9e1a526c9231f031e0eb3e215",
       "source": "instance"
     },
     {
@@ -117,7 +117,7 @@
     },
     {
       "path": ".claude/skills/ticket-review/SKILL.md",
-      "sha256": "c447f9e8edab46ff83e948fe915e845ffd63d950df7d993f77cce017dcc6457b",
+      "sha256": "cd7574e82f8760bf148279a2e5056ff28b1764b737d183550353a4a35de78f94",
       "source": "instance"
     },
     {

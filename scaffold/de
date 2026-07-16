@@ -201,8 +201,42 @@ case "$CMD" in
     ;;
 
   serve|stop)
-    echo "serve/stop: provided by bridge/ in a later milestone (see docs/10-scaffold/de-cli-spec.md §2.3)." >&2
-    exit 1
+    INSTANCE_ARG="${1:-.}"
+    if [ "$INSTANCE_ARG" != "." ] && [[ "$INSTANCE_ARG" != -* ]]; then
+      shift || true
+    else
+      INSTANCE_ARG="."
+    fi
+    if [ ! -d "$INSTANCE_ARG" ]; then
+      echo "error: instance directory not found: $INSTANCE_ARG" >&2
+      exit 2
+    fi
+    INSTANCE_ROOT="$(resolve_instance_root "$INSTANCE_ARG")"
+    set_scaffold_root "$INSTANCE_ROOT"
+    load_dotenv "$INSTANCE_ROOT"
+    BRIDGE_CONFIG="$INSTANCE_ROOT/log/bridge-config.yaml"
+    PID_FILE="$INSTANCE_ROOT/log/bridge-http.pid"
+    if [ "$CMD" = "stop" ]; then
+      if [ -f "$PID_FILE" ] && kill "$(cat "$PID_FILE")" 2>/dev/null; then
+        echo "bridge stopped (pid $(cat "$PID_FILE"))."
+        rm -f "$PID_FILE"
+        exit 0
+      fi
+      echo "error: no running bridge found ($PID_FILE)." >&2
+      exit 1
+    fi
+    if [ ! -f "$BRIDGE_CONFIG" ]; then
+      echo "error: $BRIDGE_CONFIG not found. Set bridge.enabled: true in instance.yaml and run './de build' first." >&2
+      exit 1
+    fi
+    BRIDGE_PROJECT="$SCAFFOLD_ROOT/../bridge"
+    if [ ! -f "$BRIDGE_PROJECT/pyproject.toml" ]; then
+      echo "error: bridge project not found at $BRIDGE_PROJECT" >&2
+      exit 1
+    fi
+    export_env_floor "$INSTANCE_ROOT" "runtime"
+    cd "$INSTANCE_ROOT"
+    exec uv run --project "$BRIDGE_PROJECT" python -m bridge.app --config "$BRIDGE_CONFIG" "$@"
     ;;
 
   kb)

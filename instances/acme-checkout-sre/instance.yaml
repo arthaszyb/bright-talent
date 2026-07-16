@@ -62,7 +62,16 @@ kb:
   live_refs: []
 
 bridge:
-  enabled: false
+  enabled: true
+  auth:
+    allowed_users:
+      - "demo-user"
+      - "mentor-one"
+    admin_users:
+      - "mentor-one"
+  server:
+    host: "127.0.0.1"
+    port: 9100
 
 advanced:
   model: null

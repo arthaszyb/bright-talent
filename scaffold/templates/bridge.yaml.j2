@@ -1,69 +1,51 @@
-{# bridge.yaml.j2 — Bridge configuration for chat-platform integration
+{# bridge.yaml.j2 — Bridge configuration rendered at build time into <instance>/log/bridge-config.yaml.
    Variable contract (StrictUndefined):
-   - bridge: dict with keys: chat_platform (mode, relay_url, api_base_url, working_card_enabled),
-             server (host, port), auth (allowed_users, admin_users),
-             sessions (idle_timeout_minutes, max_sessions, workspace_root, runtime_snapshots_root, sandbox_backend),
-             agent (backend, extra_args, response_timeout_seconds, permission_handling),
-             memory (enabled, context_max_chars, context_max_results)
-   - env: dict for environment variable references like {{ env.VAR }}
+   - bridge: the instance.yaml `bridge:` mapping (enabled, chat_platform, server, auth,
+             sessions, agent, memory — all sub-keys optional, demo defaults applied here)
+   - env: environment variables for secret references like {{ env.VAR }}
+   Output schema must match bridge/bridge/config.py (the demo bridge app's loader).
 #}
-# Bridge configuration for chat-platform integration
-# Secrets are injected as environment variables at deploy time (see instance.yaml bridge.enabled and §10 of bridge config-spec.md)
+# Bridge configuration (generated — do not edit; edit instance.yaml `bridge:` and rebuild)
+# Secrets are injected as environment variables at deploy time.
 
 chat:
   app_id: "{{ env.CHATOPS_APP_ID | default('demo-app-id', true) }}"
-  app_secret: "{{ env.CHATOPS_APP_SECRET | default('sk-demo-placeholder', true) }}"
-  signing_secret: "{{ env.CHATOPS_SIGNING_SECRET | default('sk-demo-placeholder', true) }}"
-  api_base_url: "{{ bridge.chat_platform.api_base_url | default('http://localhost:9100', true) }}"
-  bot_id: "{{ bridge.chat_platform.bot_id | default('demo-bot', true) }}"
-  mode: "{{ bridge.chat_platform.mode | default('webhook', true) }}"
-  relay_url: "{{ bridge.chat_platform.relay_url | default('', true) }}"
+  signing_secret: "{{ env.CHATOPS_SIGNING_SECRET | default('changeme-demo-secret', true) }}"
+  api_base_url: "{{ bridge.get('chat_platform', {}).get('api_base_url', 'http://localhost:9101') }}"
+  bot_id: "{{ bridge.get('chat_platform', {}).get('bot_id', 'demo-bot') }}"
 
 server:
-  host: "{{ bridge.server.host | default('0.0.0.0', true) }}"
-  port: {{ bridge.server.port | default(8000, true) }}
-  debug: false
+  host: "{{ bridge.get('server', {}).get('host', '127.0.0.1') }}"
+  port: {{ bridge.get('server', {}).get('port', 9100) }}
+  pid_file: "log/bridge-http.pid"
 
 agent:
-  executable: "claude"
-  extra_args: {{ bridge.agent.extra_args | default([], true) | tojson }}
-  response_timeout_seconds: {{ bridge.agent.response_timeout_seconds | default(120, true) }}
-  default_permission_mode: "{{ bridge.agent.permission_handling | default('skip', true) | replace('skip', 'bypassPermissions') | replace('auto', 'acceptEdits') }}"
+  claude_cmd: "{{ bridge.get('agent', {}).get('backend', 'claude') }}"
+  permission_mode: "{{ bridge.get('agent', {}).get('permission_handling', 'acceptEdits') }}"
+  extra_args: {{ bridge.get('agent', {}).get('extra_args', []) | tojson }}
   env:
-    CHANGE_GATEWAY_BASE: "http://localhost:8801"
+    CHANGE_GATEWAY_BASE: "{{ env.CHANGE_GATEWAY_BASE | default('http://localhost:8801', true) }}"
 
 sessions:
-  idle_timeout_minutes: {{ bridge.sessions.idle_timeout_minutes | default(30, true) }}
-  default_working_directory: "./runtime"
-  workspace_root: "{{ bridge.sessions.workspace_root | default('', true) }}"
-  runtime_snapshots_root: "{{ bridge.sessions.runtime_snapshots_root | default('', true) }}"
-  max_sessions: {{ bridge.sessions.max_sessions | default(20, true) }}
-  data_dir: "~/.claude-bridge"
-  state_file: ""
+  idle_timeout_seconds: {{ bridge.get('sessions', {}).get('idle_timeout_seconds', 60) }}
+  max_sessions: {{ bridge.get('sessions', {}).get('max_sessions', 20) }}
+  working_dir: "./runtime"
+  data_dir: "./log/bridge-data"
 
 auth:
   allowed_users:
-{% for user in bridge.auth.allowed_users %}
+{% for user in bridge.get('auth', {}).get('allowed_users', []) %}
     - "{{ user }}"
 {% endfor %}
   admin_users:
-{% for admin in bridge.auth.admin_users %}
+{% for admin in bridge.get('auth', {}).get('admin_users', []) %}
     - "{{ admin }}"
 {% endfor %}
-  no_mention_groups: []
 
 memory:
-  enabled: {{ bridge.memory.enabled | default(true, true) | lower }}
+  enabled: {{ bridge.get('memory', {}).get('enabled', true) | lower }}
   context_min_chars: 5
-  context_max_chars: {{ bridge.memory.context_max_chars | default(2000, true) }}
-  context_max_results: {{ bridge.memory.context_max_results | default(5, true) }}
+  context_max_chars: {{ bridge.get('memory', {}).get('context_max_chars', 2000) }}
+  context_max_results: {{ bridge.get('memory', {}).get('context_max_results', 3) }}
 
-dream:
-  enabled: true
-  min_hours: 24
-  min_entries: 10
-  check_interval_minutes: 60
-  timeout_seconds: 600
-  model: ""
-
-slash_commands: {}
+reply_transport: "log+callback"
