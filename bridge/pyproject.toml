@@ -11,12 +11,12 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "pyyaml",
+    "httpx",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "httpx",
 ]
 
 [tool.setuptools]

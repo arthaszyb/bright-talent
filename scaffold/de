@@ -202,7 +202,7 @@ case "$CMD" in
 
   serve|stop)
     INSTANCE_ARG="${1:-.}"
-    if [ "$INSTANCE_ARG" != "." ] && [[ "$INSTANCE_ARG" != -* ]]; then
+    if [ $# -ge 1 ] && [[ "$INSTANCE_ARG" != -* ]]; then
       shift || true
     else
       INSTANCE_ARG="."
