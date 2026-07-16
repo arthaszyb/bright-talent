@@ -1,0 +1,39 @@
+# Example bridge configuration for de-demo (fictional Acme Corp universe).
+# Copy/adapt this file and pass it via `python -m bridge.app --config <path>`.
+
+chat:
+  app_id: "demo-app-id"
+  signing_secret: "changeme-demo-secret"
+  api_base_url: "http://localhost:9101"   # chat_client.py's callback listener (reply delivery target)
+  bot_id: "demo-bot"
+
+server:
+  host: "127.0.0.1"
+  port: 9100
+  pid_file: "log/bridge-http.pid"
+
+agent:
+  claude_cmd: "claude"
+  permission_mode: "acceptEdits"
+  extra_args: []
+  env:
+    DE_AGENT_PROJECT_DIR: "./runtime"
+    DE_SCOPE_SERVICE_CATALOG: "acme.storefront.checkout"
+
+sessions:
+  idle_timeout_seconds: 60
+  max_sessions: 20
+  working_dir: "./runtime"
+  data_dir: "./data"
+
+auth:
+  allowed_users: []
+  admin_users: []
+
+memory:
+  enabled: true
+  context_min_chars: 5
+  context_max_chars: 2000
+  context_max_results: 3
+
+reply_transport: "log+callback"
