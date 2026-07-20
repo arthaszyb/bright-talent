@@ -87,6 +87,11 @@ def run_agent(
     cmd = ["claude", "-p", prompt, "--output-format", "stream-json", "--verbose"]
     if extra_args:
         cmd.extend(extra_args)
+    # Headless runs in an untrusted workspace ignore the runtime's
+    # settings.json permissions.allow, so the harness grants the eval floor
+    # explicitly. The scaffold hooks (skill-gate etc.) still apply on top.
+    if "--allowedTools" not in cmd:
+        cmd.extend(["--allowedTools", "Skill,Read,Grep,Glob,Bash(uv:*)"])
     proc = subprocess.run(
         cmd,
         cwd=str(cwd),

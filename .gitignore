@@ -11,3 +11,4 @@ log/
 *.egg-info/
 .commands.jsonl
 transcript.jsonl
+eval/runs/

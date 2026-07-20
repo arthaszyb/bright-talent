@@ -8,6 +8,11 @@ identity:
 scope:
   service_catalog:
     - acme.demo.eval
+    # Skill-under-test fixtures reference these services' clusters; the
+    # fixture DE must be in-scope for them or the scope-refusal rule
+    # (correctly) blocks the e2e happy paths.
+    - acme.storefront.checkout
+    - acme.storefront.cart
 
 base:
   version: "0.1.0"

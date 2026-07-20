@@ -43,8 +43,13 @@ This document is the binding integration design. `ARCHITECTURE.md` fixes layout/
 - Subcommands: `lint|triggers|safety|e2e <skill-dir|runtime-dir>`; exit 0 pass / 1 fail / 2 usage. Batch flags: `--cases <glob>`, `--report <json path>`.
 - Judge pin: `eval/judge.toml` → `[judge] model = "claude-haiku-4-5"`; judged assertions retried at most once (recorded in report), per governance §3.
 - e2e PATH-shim: shims for first words of fixture `command_prefix` + deny-set (`curl wget ssh kubectl`); unix-socket fixture server; first-match-in-file-order; unmatched → shim exit 97 + case fails; `""` fallback recorded `"fallback": true`. Artifacts per case: `.commands.jsonl`, `transcript.jsonl` under `eval/runs/<ts>/<case>/`.
-- Skill-level runs use a **fixture runtime** (identity `DE-EVAL-FIXTURE-001`, scope `["acme.demo.eval"]`) materialized by calling the real scaffold builder against a vendored fixture instance config in `eval/fixture-instance/` — eval never re-implements the build.
+- Skill-level runs use a **fixture runtime** (identity `DE-EVAL-FIXTURE-001`, scope `["acme.demo.eval"]` plus the services referenced by the skill-under-test's fixtures — for ticket-review: `acme.storefront.checkout`, `acme.storefront.cart` — otherwise the DE's scope-refusal rule correctly blocks the e2e happy paths) materialized by calling the real scaffold builder against a vendored fixture instance config in `eval/fixture-instance/` — eval never re-implements the build.
 - Trigger detection = presence of `Skill` tool_use for the target skill in stream-json transcript.
+- **Strict-replay verified (live, two-part proof against scratch copies of `ticket-review`'s `review-violating-ticket.mock.yaml`, both `--rebuild-fixture`):**
+  (a) analyze-fixtures *and* the `""` fallback both removed → `unmatched-command error` reported at the execution axis, case FAIL, matching eval-spec.md §5's normative "no fixture matches, including no fallback" rule.
+  (b) analyze-fixtures removed, fallback kept → both `analyze.py` invocations are served by the fallback and correctly recorded `"fallback": true` in `.commands.jsonl`, but the case still PASSED. Cause: `_check_execution_axis` (`eval/de_eval/e2e.py`) only fails on truly-unmatched commands, not on fallback-served ones (this matches spec — the fallback exists precisely so a case *can* still pass if the agent behaves well); and this specific case's `render_comment.py` fixture is a static reply keyed only on command prefix, not on its `--analysis` argument's content, so it returned the "correct" narrative even though the agent's real analysis step never ran. The agent (observed in the transcript) noticed the failures, self-debugged the harness, and proceeded to call `render_comment.py` with a fabricated/never-written `--analysis` path rather than disclosing the tool failure — behavior the eval-spec's stated purpose for fallbacks ("assert the agent handles tool failure honestly, doesn't fabricate") is meant to catch, but which the bundled case's `expected_result` assertions don't actually test for. **Not a harness bug** — command-replay mocking is inherently prefix-keyed, not data-flow-aware; registered as D9 below.
+
+
 
 ### S6. Bridge (`bridge/`)
 - `./de serve` renders `bridge.yaml.j2` → `<instance>/log/bridge-config.yaml` (secrets as env refs), then `uv run --project "$SCAFFOLD_ROOT/../bridge" python -m bridge.app --config <path>`; PID at `log/bridge-http.pid`.
@@ -75,6 +80,7 @@ This document is the binding integration design. `ARCHITECTURE.md` fixes layout/
 | D6 | Per-instance service accounts / secret store: `.env` + placeholders only | deferred-with-note |
 | D7 | CLI/model pinned by recording versions in `.build-info.json`; no canary fleet | simplified-for-demo |
 | D8 | skill-gate flag set on Skill PreToolUse (not post-success); hooks via system python3 (stdlib) | simplified-for-demo |
+| D9 | de-eval command-replay fixtures match on command prefix only, not argument content — a downstream fixture can't detect that an upstream step actually failed/was faked; verified live via the strict-replay double proof (S5) | simplified-for-demo |
 
 ## 5. Risk register and mitigations
 | Risk | Where | Mitigation |
