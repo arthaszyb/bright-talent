@@ -62,10 +62,13 @@ def _sha256_tree(directory: Path) -> str:
     return h.hexdigest()
 
 
-def _git_commit(path: Path) -> str | None:
+def _git_commit(path: Path, ref: str | None) -> str | None:
+    """Resolve `ref` (a tag or commit pin) to a commit hash inside the repo
+    that contains `path`. `ref=None` falls back to HEAD, which only makes
+    sense for an unpinned ("latest") dependency."""
     try:
         out = subprocess.run(
-            ["git", "-C", str(path), "rev-parse", "HEAD"],
+            ["git", "-C", str(path), "rev-parse", f"{ref or 'HEAD'}^{{commit}}"],
             capture_output=True,
             text=True,
             timeout=5,
@@ -145,11 +148,11 @@ def resolve_and_install(
         skills_for_template.append(
             {"name": dep_name, "description": _skill_description(skill_dir)}
         )
+        pin = dep_spec.get("tag") or dep_spec.get("commit")
         lock_skills[dep_name] = {
-            "version": dep_spec.get("tag") or dep_spec.get("commit") or "latest",
-            "commit": _git_commit(skill_dir),
+            "version": pin or "latest",
+            "commit": _git_commit(skill_dir, pin),
             "integrity": f"sha256:{_sha256_tree(skill_dir)}",
-            "path": str(skill_dir),
         }
 
     lock_path = instance_dir / LOCK_FILENAME

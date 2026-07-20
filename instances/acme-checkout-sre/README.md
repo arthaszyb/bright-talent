@@ -18,7 +18,7 @@ The DE-ACME-CHECKOUT-001 assistant provides:
 
 ### 1. Validate Configuration
 ```bash
-cd /Users/arthas/Downloads/my_projects/bright-talent/de-demo/instances/acme-checkout-sre
+cd instances/acme-checkout-sre   # from the de-demo repo root
 ../../scaffold/de validate .
 ```
 Expected: Exit code 0, no errors.
