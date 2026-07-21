@@ -131,7 +131,7 @@ def resolve_and_install(
         skill_dir = candidates[0].parent
         dest_dir = skills_dest_root / dep_name
         dest_dir.mkdir(parents=True, exist_ok=True)
-        for src_file in skill_dir.rglob("*"):
+        for src_file in sorted(skill_dir.rglob("*")):
             if src_file.is_file():
                 rel = src_file.relative_to(skill_dir)
                 dst_file = dest_dir / rel
