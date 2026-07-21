@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _common import FrontmatterError, read_frontmatter, run_git  # noqa: E402
+from _common import FrontmatterError, run_git  # noqa: E402
 
 SKILLS_SUBPATH = "skills/skills"
 

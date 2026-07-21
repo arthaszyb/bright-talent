@@ -24,6 +24,16 @@ def test_skills_ci_available_when_workflow_present(tmp_path):
     assert status["available"] is True
 
 
+def test_skills_ci_available_from_repo_root_workflow(tmp_path):
+    wf = tmp_path / ".github" / "workflows"
+    wf.mkdir(parents=True)
+    (wf / "skills-ci.yml").write_text("name: ci\n")
+    skills_dir = tmp_path / "skills"
+    skills_dir.mkdir()
+    status = MockCIProvider().skills_ci(skills_dir)
+    assert status["available"] is True
+
+
 def test_skills_ci_unavailable_without_workflow(tmp_path):
     status = MockCIProvider().skills_ci(tmp_path)
     assert status["available"] is False

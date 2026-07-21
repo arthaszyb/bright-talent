@@ -22,7 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 # ---------------------------------------------------------------------------
 # Seed data (deterministic; invented round numbers for illustration only).

@@ -34,7 +34,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _common import is_valid_semver, read_frontmatter, FrontmatterError  # noqa: E402
+from _common import FrontmatterError, is_valid_semver, read_frontmatter  # noqa: E402
 
 RISK_LEVELS = {"L1", "L2", "L3"}
 BARE_BASH_RULE = "no-bare-bash"

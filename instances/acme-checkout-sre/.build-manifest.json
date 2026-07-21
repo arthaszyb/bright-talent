@@ -2,12 +2,12 @@
   "files": [
     {
       "path": ".claude/hooks/context-isolator.py",
-      "sha256": "d8c8ad19cf324c1df7ab27f9c527b5fa0887d642fcd25de57e9504d1fcaa0ffb",
+      "sha256": "2eb1663dc020047c9dbda98dc2905e184c4ff4276b86869f9aea8e37397ecf5d",
       "source": "base"
     },
     {
       "path": ".claude/hooks/escalation-guard.py",
-      "sha256": "903ddb742bf2c65405674ecb59bab613e202c6e0d943ba0716e85655e418b38c",
+      "sha256": "8b1c0a1329ffd21f830815b458fc104dfa982dedfbb6b582605104f8be490b48",
       "source": "base"
     },
     {
@@ -27,7 +27,7 @@
     },
     {
       "path": ".claude/hooks/skill-gate.py",
-      "sha256": "488e826f45929f709ef2d1da8e6948f187be9688c1e5f80c81a4cd5cebb34bf5",
+      "sha256": "efbf3ab5630b4943a20f5088e4f3d87f5c99d9e077a3f8b472f5d922437462df",
       "source": "base"
     },
     {
@@ -52,12 +52,12 @@
     },
     {
       "path": ".claude/tools/de-agent-escalate.py",
-      "sha256": "ea441bff9eb7ea05c682e1dc6698749a25b4b88b9261bd35b614004ab63c4560",
+      "sha256": "f261186691c217241eb6f88f46dac28e235e64434602757a560ba86da0407949",
       "source": "base"
     },
     {
       "path": ".claude/tools/de_agent_escalate_lib.py",
-      "sha256": "5f2633de697f13306f633b26ac4bd2808247522d798dd538e30ee74bcfcbeb9c",
+      "sha256": "2e5cf56a0006fe636d4bba298b4d25243a9179a3afb93f695d1e04249eeccf99",
       "source": "base"
     },
     {
@@ -96,18 +96,8 @@
       "source": "instance"
     },
     {
-      "path": ".claude/skills/ticket-review/uv.lock",
-      "sha256": "b359dce62525cbc4b550914df6c18851fb325ea6c4e600f71926112b50c8e102",
-      "source": "instance"
-    },
-    {
       "path": ".claude/skills/ticket-review/CHANGELOG.md",
       "sha256": "ce0226f6c6278a3465ae3ba320ad0c9e19df6ca9e1a526c9231f031e0eb3e215",
-      "source": "instance"
-    },
-    {
-      "path": ".claude/skills/ticket-review/pyproject.toml",
-      "sha256": "0a5999797994589df55e92db11b31bf342bf2aca10534873659d76cabb876cea",
       "source": "instance"
     },
     {
@@ -121,8 +111,38 @@
       "source": "instance"
     },
     {
-      "path": ".claude/skills/ticket-review/tests/triggers.yaml",
-      "sha256": "aa9d6c8a92526f61571804d0f2f376e935e2f86be5b04b696fb5444e86502a76",
+      "path": ".claude/skills/ticket-review/pyproject.toml",
+      "sha256": "0a5999797994589df55e92db11b31bf342bf2aca10534873659d76cabb876cea",
+      "source": "instance"
+    },
+    {
+      "path": ".claude/skills/ticket-review/scripts/analyze.py",
+      "sha256": "991213156eda3cbdaa39f3fffef1c52390552ff08321635af4e23c7c1e3a0e79",
+      "source": "instance"
+    },
+    {
+      "path": ".claude/skills/ticket-review/scripts/fetch_metrics.py",
+      "sha256": "8efad3c86197111b59084355981960011d4f5e82a4d750b5b468503ec87d8f57",
+      "source": "instance"
+    },
+    {
+      "path": ".claude/skills/ticket-review/scripts/fetch_ticket.py",
+      "sha256": "5ddbce2be7ac94237dd7cc05aa6745a63b0414e99d76ae52bcd962546f5d8a5b",
+      "source": "instance"
+    },
+    {
+      "path": ".claude/skills/ticket-review/scripts/render_comment.py",
+      "sha256": "d166fc3e8966a4aa9b5ceeb642d618ca25f81687092e5223c6e3a7b74568a210",
+      "source": "instance"
+    },
+    {
+      "path": ".claude/skills/ticket-review/tests/review-safe-ticket.mock.yaml",
+      "sha256": "ca299e05e5ab57af506edaa204a5f0cc61b7341b0b7d4d35ee7710c1b86b3afb",
+      "source": "instance"
+    },
+    {
+      "path": ".claude/skills/ticket-review/tests/review-violating-ticket.mock.yaml",
+      "sha256": "195ec0d5d5e1a9b4437c8afd121b895b0aad799aa796df8421bf2965ab8201cc",
       "source": "instance"
     },
     {
@@ -136,33 +156,13 @@
       "source": "instance"
     },
     {
-      "path": ".claude/skills/ticket-review/tests/review-violating-ticket.mock.yaml",
-      "sha256": "195ec0d5d5e1a9b4437c8afd121b895b0aad799aa796df8421bf2965ab8201cc",
+      "path": ".claude/skills/ticket-review/tests/triggers.yaml",
+      "sha256": "aa9d6c8a92526f61571804d0f2f376e935e2f86be5b04b696fb5444e86502a76",
       "source": "instance"
     },
     {
-      "path": ".claude/skills/ticket-review/tests/review-safe-ticket.mock.yaml",
-      "sha256": "ca299e05e5ab57af506edaa204a5f0cc61b7341b0b7d4d35ee7710c1b86b3afb",
-      "source": "instance"
-    },
-    {
-      "path": ".claude/skills/ticket-review/scripts/render_comment.py",
-      "sha256": "d166fc3e8966a4aa9b5ceeb642d618ca25f81687092e5223c6e3a7b74568a210",
-      "source": "instance"
-    },
-    {
-      "path": ".claude/skills/ticket-review/scripts/fetch_ticket.py",
-      "sha256": "5ddbce2be7ac94237dd7cc05aa6745a63b0414e99d76ae52bcd962546f5d8a5b",
-      "source": "instance"
-    },
-    {
-      "path": ".claude/skills/ticket-review/scripts/fetch_metrics.py",
-      "sha256": "8efad3c86197111b59084355981960011d4f5e82a4d750b5b468503ec87d8f57",
-      "source": "instance"
-    },
-    {
-      "path": ".claude/skills/ticket-review/scripts/analyze.py",
-      "sha256": "991213156eda3cbdaa39f3fffef1c52390552ff08321635af4e23c7c1e3a0e79",
+      "path": ".claude/skills/ticket-review/uv.lock",
+      "sha256": "b359dce62525cbc4b550914df6c18851fb325ea6c4e600f71926112b50c8e102",
       "source": "instance"
     },
     {

@@ -24,6 +24,29 @@ from .sessions import SessionManager
 
 logger = logging.getLogger("bridge.app")
 
+# The placeholder secret shipped in config.example.yaml / bridge.yaml.j2.
+# Anyone who knows it can forge valid webhook signatures.
+DEMO_SIGNING_SECRET = "changeme-demo-secret"
+_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
+
+
+def enforce_signing_secret_policy(config: BridgeConfig) -> None:
+    """Refuse to expose the bridge beyond loopback with the well-known demo
+    secret; on loopback, warn loudly instead of failing the demo flow."""
+    if config.chat.signing_secret != DEMO_SIGNING_SECRET:
+        return
+    if config.server.host not in _LOOPBACK_HOSTS:
+        raise SystemExit(
+            "bridge: refusing to bind to "
+            f"{config.server.host!r} with the default demo signing secret — "
+            "set CHATOPS_SIGNING_SECRET (or chat.signing_secret) to a real value "
+            "before exposing the webhook beyond loopback."
+        )
+    logger.warning(
+        "bridge: running with the default demo signing secret (loopback only); "
+        "set CHATOPS_SIGNING_SECRET for any non-demo deployment"
+    )
+
 
 async def deliver_reply(channel_id, thread_id, text: str, config: BridgeConfig) -> None:
     """Always log the reply; best-effort POST it to chat.api_base_url."""
@@ -150,6 +173,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
     config = load_config(args.config)
+    enforce_signing_secret_policy(config)
     app = create_app(config)
 
     import uvicorn

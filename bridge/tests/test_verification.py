@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from conftest import sign, TEST_SECRET
+from conftest import TEST_SECRET, sign
 
 
 def test_verification_challenge_echoed(client):

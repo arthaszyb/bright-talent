@@ -8,9 +8,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CONSOLE_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(CONSOLE_ROOT))
 
+from console.api import build_app  # noqa: E402
 from console.config import Config  # noqa: E402
 from console.db import Database  # noqa: E402
-from console.api import build_app  # noqa: E402
 
 
 @pytest.fixture()

@@ -21,7 +21,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from builder import merge, render, skills as skills_mod, validate
+from builder import merge, render, validate
+from builder import skills as skills_mod
 from builder.errors import BuildError
 
 SCAFFOLD_VERSION_FILE = "VERSION"

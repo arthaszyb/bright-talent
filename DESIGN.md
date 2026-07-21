@@ -1,7 +1,7 @@
 # de-demo Global Design — Component Boundaries, Seam Contracts, Execution Plan
 
 Status: architect-reviewed after wave 1 (M0 mocks, M1 hooks/policies, M1 templates/kb/seeds all delivered and verified).
-This document is the binding integration design. `ARCHITECTURE.md` fixes layout/conventions; this file fixes **who owns what, what crosses each boundary, and in what order we build**. Specs remain authoritative in `../docs/`; where the demo deviates, the deviation is registered here (§4) and must be echoed in the final README governance answers.
+This document is the binding integration design. `ARCHITECTURE.md` fixes layout/conventions; this file fixes **who owns what, what crosses each boundary, and in what order we build**. The original spec blueprint (`docs/…`, cited by section number in module docstrings) is not shipped with this repository — where the demo deviates from it, the deviation is registered here (§4) and echoed in the README governance answers.
 
 ---
 

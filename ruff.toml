@@ -1,0 +1,14 @@
+# Repo-wide lint floor (run: uvx ruff check .). Kept intentionally small:
+# pyflakes + pycodestyle errors + import ordering. Enforced by repo-ci.
+target-version = "py311"
+line-length = 110
+
+# Never lint build artifacts: runtime/ and editor/ are compiled output whose
+# sha256 hashes must keep matching .build-manifest.json.
+extend-exclude = ["**/runtime", "**/editor", "eval/runs", "**/.base-cache", "**/.skills-cache"]
+
+[lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[lint.isort]
+known-first-party = ["bridge", "builder", "console", "de_eval"]

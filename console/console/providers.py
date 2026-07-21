@@ -11,8 +11,9 @@ DESIGN.md §S2). The instance-level "managed workflow file" the design doc's
 demo note refers to is treated here as the instance's `Makefile`, which *is*
 a committed, always-present managed file whose `verify` target
 (`de validate && de build`) is the instance's actual local CI entry point.
-The skills repo genuinely has `.github/workflows/skills-ci.yml`, so that one
-is checked literally per spec.
+The skills pipeline genuinely has a `skills-ci.yml` workflow (at the repo
+root `.github/workflows/`, the only place GitHub executes workflows from),
+so that one is checked literally per spec.
 """
 from __future__ import annotations
 
@@ -29,8 +30,14 @@ class MockCIProvider:
         return self._status(marker.is_file())
 
     def skills_ci(self, skills_dir: Path) -> dict[str, Any]:
-        marker = skills_dir / ".github" / "workflows" / "skills-ci.yml"
-        return self._status(marker.is_file())
+        # The workflow lives at the repository root .github/ (GitHub only
+        # executes workflows from there); accept the legacy in-tree location
+        # for skills registries that are standalone repos.
+        markers = (
+            skills_dir.parent / ".github" / "workflows" / "skills-ci.yml",
+            skills_dir / ".github" / "workflows" / "skills-ci.yml",
+        )
+        return self._status(any(m.is_file() for m in markers))
 
     @staticmethod
     def _status(available: bool) -> dict[str, Any]:
