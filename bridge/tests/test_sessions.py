@@ -4,7 +4,7 @@ import json
 import time
 from pathlib import Path
 
-from conftest import sign, TEST_SECRET
+from conftest import TEST_SECRET, sign
 
 
 def post_event(client, event: dict):
@@ -57,7 +57,6 @@ def test_session_reuse_single_subprocess(client):
     assert entry1["session_id"]
 
     created_at_1 = entry1["created_at"]
-    last_active_1 = entry1["last_active_at"]
 
     resp2 = post_event(client, message_event("evt-2", "c-reuse", "t-reuse", "u1", "hello two"))
     assert resp2.status_code == 200

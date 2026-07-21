@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from de_eval import agent
-from de_eval.yaml_io import UsageError, load_yaml
+from de_eval.yaml_io import load_yaml
 
 DEFAULT_PASS_THRESHOLD = 0.9
 

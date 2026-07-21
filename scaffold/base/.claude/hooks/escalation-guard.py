@@ -5,11 +5,11 @@ Circuit breaker against repeated failing or identical tool calls.
 Backed by escalation.guard.* config and work/.escalations/guard_state.json.
 """
 
-import sys
+import hashlib
 import json
 import os
-import hashlib
 import re
+import sys
 from datetime import datetime, timezone
 
 # Resolve project directory

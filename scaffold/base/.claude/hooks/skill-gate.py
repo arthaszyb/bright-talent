@@ -5,9 +5,9 @@ Enforces the CLAUDE.md three-step protocol: confirm need → select skill → ex
 No tool calls before Skill has been invoked this session (except allowlist).
 """
 
-import sys
 import json
 import os
+import sys
 
 # Resolve project directory
 project_dir = os.getenv('DE_AGENT_PROJECT_DIR') or os.getenv('CLAUDE_PROJECT_DIR') or '.'

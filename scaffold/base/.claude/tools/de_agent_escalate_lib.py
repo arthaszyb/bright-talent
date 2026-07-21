@@ -4,13 +4,11 @@ Used by both the MCP server and the escalation-guard hook.
 Creates and tracks escalation events in a canonical format.
 """
 
+import hashlib
 import json
 import os
-import hashlib
 import re
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Optional
 
 
 def get_events_file() -> str:

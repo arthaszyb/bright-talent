@@ -28,7 +28,6 @@ import subprocess
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Any
 
 from .config import Config
 from .db import Database, dumps, loads, row_to_dict

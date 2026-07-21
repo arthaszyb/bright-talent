@@ -5,9 +5,9 @@ Exposes the escalate tool for agent-initiated escalations.
 Implements initialize, tools/list, tools/call per MCP spec.
 """
 
-import sys
 import json
 import os
+import sys
 
 # Import the shared library from the same directory
 sys.path.insert(0, os.path.dirname(__file__))

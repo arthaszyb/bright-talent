@@ -13,7 +13,8 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from de_eval import agent, judge as judge_mod
+from de_eval import agent
+from de_eval import judge as judge_mod
 from de_eval.yaml_io import load_yaml
 
 DEFAULT_PASS_THRESHOLD = 1.0

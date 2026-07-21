@@ -17,7 +17,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from de_eval import agent, judge as judge_mod, paths, shim
+from de_eval import agent, paths, shim
+from de_eval import judge as judge_mod
 from de_eval.fixture_server import FixtureFileError, FixtureServer
 from de_eval.yaml_io import UsageError, load_yaml
 

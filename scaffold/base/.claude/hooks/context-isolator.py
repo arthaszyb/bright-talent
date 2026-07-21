@@ -4,10 +4,10 @@ context-isolator.py — UserPromptSubmit hook
 Wraps externally-sourced spans (fenced code, JSON, logs, etc.) in <untrusted_data> tags.
 """
 
-import sys
 import json
 import os
 import re
+import sys
 
 # Resolve project directory
 project_dir = os.getenv('DE_AGENT_PROJECT_DIR') or os.getenv('CLAUDE_PROJECT_DIR') or '.'
