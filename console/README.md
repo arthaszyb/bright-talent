@@ -47,8 +47,9 @@ uv run --project console --extra dev pytest console/tests -q
     actual local CI entry point, since no `.github/workflows/instance-ci.yml`
     is ever produced by the build pipeline in this fictional universe (see
     `DESIGN.md` §S2). All declared steps report `pass`. For the skills repo,
-    CI availability is checked literally against
-    `skills/.github/workflows/skills-ci.yml`, which does exist.
+    CI availability is checked literally against the `skills-ci.yml`
+    workflow (repo root `.github/workflows/`, with the legacy in-tree
+    `skills/.github/` location also accepted).
   - **MR**: "creating an MR" inserts a `drafts` row and creates a local git
     branch `console/draft-<id>` in the de-demo repo — nothing is pushed
     anywhere, no network call is made.

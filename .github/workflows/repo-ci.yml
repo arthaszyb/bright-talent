@@ -1,0 +1,85 @@
+name: repo-ci
+
+# Repo-wide gates: lint floor, fictional-universe leak check, and the three
+# deterministic pytest suites (builder / bridge / console). None of these
+# jobs needs an authenticated `claude` CLI — the builder records the CLI
+# version only when present, and console tests run against a freshly built
+# instance runtime with the tracked build metadata restored afterwards.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: repo-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: ruff
+        run: uvx ruff check .
+
+  leak-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: leak-check
+        run: bash scripts/leak-check.sh .
+
+  builder-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: merge-invariant unit tests
+        run: uv run --project scaffold/builder --extra dev pytest scaffold/builder/tests -q
+      - name: validate + build the reference instance
+        working-directory: instances/acme-checkout-sre
+        run: |
+          ../../scaffold/de validate .
+          ../../scaffold/de build .
+      - name: committed build metadata must match a fresh build
+        working-directory: instances/acme-checkout-sre
+        run: git diff --exit-code -- .build-manifest.json .managed-files.json
+      - name: build determinism — second build must be byte-identical
+        working-directory: instances/acme-checkout-sre
+        run: |
+          cp .build-manifest.json /tmp/first-build-manifest.json
+          cp .managed-files.json /tmp/first-managed-files.json
+          ../../scaffold/de build .
+          diff /tmp/first-build-manifest.json .build-manifest.json
+          diff /tmp/first-managed-files.json .managed-files.json
+
+  bridge-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: pytest
+        run: uv run --project bridge --extra dev pytest bridge/tests -q
+
+  console-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: build instance runtime (console health checks need it)
+        working-directory: instances/acme-checkout-sre
+        run: |
+          ../../scaffold/de build .
+          # Restore tracked build metadata: the console suite asserts the
+          # instance tree stays clean, and drift checks read the committed
+          # manifest against the runtime/ tree we just built.
+          git checkout -- .
+      - name: pytest
+        run: uv run --project console --extra dev pytest console/tests -q
