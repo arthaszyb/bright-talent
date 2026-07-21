@@ -1,6 +1,6 @@
 # de-demo Architecture Conventions (binding for all components)
 
-Demo of the Acme Corp Digital Employee platform. Blueprint: `../docs/` (spec-first; this file only fixes cross-component conventions the specs leave open).
+Demo of the Acme Corp Digital Employee platform. The original spec blueprint (`docs/…`, cited by section number throughout module docstrings) is not part of this repository; this file and `DESIGN.md` carry everything binding — this file fixes the cross-component conventions the specs left open.
 
 ## Layout (fixed)
 
