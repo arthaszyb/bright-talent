@@ -96,6 +96,14 @@ cd instances/acme-checkout-sre && ../../scaffold/de serve .
 # then: uv run python ../../mocks/chat_client.py --message "hello" --secret changeme-demo-secret
 ```
 
+## Governance console
+
+Fleet health scoring, drift detection, and a draft-based config-change
+workflow (validate → build-test → mock MR), with every transition written to
+an audit log:
+
+![Governance console — instance detail](docs/assets/console-instance.png)
+
 ## Safety invariants (enforced in code)
 
 - **Propose, don't execute** — risky changes become Change Gateway tickets;

@@ -447,5 +447,11 @@ document.querySelectorAll("nav.tabs button").forEach((btn) => {
 });
 
 window.addEventListener("hashchange", route);
-window.addEventListener("DOMContentLoaded", route);
-route();
+// Render exactly once on startup: routing twice concurrently (e.g. an
+// immediate call racing DOMContentLoaded) appends two copies of every
+// async-fetched view.
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", route);
+} else {
+  route();
+}

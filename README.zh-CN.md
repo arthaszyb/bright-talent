@@ -92,6 +92,13 @@ cd instances/acme-checkout-sre && ../../scaffold/de serve .
 # 然后：uv run python ../../mocks/chat_client.py --message "hello" --secret changeme-demo-secret
 ```
 
+## 治理控制台
+
+舰队健康评分、漂移检测、基于草稿的配置变更工作流（校验 → 构建测试 → mock
+MR），每次状态迁移都写入审计日志：
+
+![治理控制台 — 实例详情](docs/assets/console-instance.png)
+
 ## 安全不变量（代码强制执行）
 
 - **只提议，不执行** —— 高风险变更变成变更网关工单；DE 负责评审和评论，
