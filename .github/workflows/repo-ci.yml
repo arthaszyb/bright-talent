@@ -52,6 +52,11 @@ jobs:
         run: |
           ../../scaffold/de validate .
           ../../scaffold/de build .
+      - name: doctor + drift check on the fresh build
+        working-directory: instances/acme-checkout-sre
+        run: |
+          ../../scaffold/de doctor .
+          ../../scaffold/de diff .
       - name: committed build metadata must match a fresh build
         # .managed-files.json carries a per-build synced_at timestamp, so it
         # is compared with that field normalized away; the manifest must be

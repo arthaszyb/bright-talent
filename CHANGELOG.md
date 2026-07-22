@@ -10,6 +10,11 @@ scaffold versions (`scaffold/VERSION`).
 ## [Unreleased]
 
 ### Added
+- Bridge inbound-text sanitization (`bridge/sanitize.py`): envelope tags,
+  spoofed role markers, and control characters are neutralized before
+  session injection — governance checklist item 4 moves from
+  simplified-for-demo to implemented (demo scope).
+- CI: `de doctor` + `de diff` drift check on the freshly built instance.
 - Containerized demo: `docker compose up --build` boots the mock Change
   Gateway + governance console; the image build and both endpoints are
   smoke-verified by the `docker-demo` CI job on every push.

@@ -17,7 +17,7 @@ from pathlib import Path
 import httpx
 from fastapi import BackgroundTasks, FastAPI, Request, Response
 
-from . import auth, commands
+from . import auth, commands, sanitize
 from .config import BridgeConfig, load_config
 from .memory import Memory
 from .sessions import SessionManager
@@ -80,7 +80,7 @@ async def handle_event(
     channel_id = event.get("channel_id")
     thread_id = event.get("thread_id")
     key = f"{channel_id}:{thread_id}"
-    text = (event.get("text") or "").strip()
+    text = sanitize.sanitize_inbound_text((event.get("text") or "").strip())
 
     if commands.is_command(text):
         token = text.split(" ", 1)[0]
