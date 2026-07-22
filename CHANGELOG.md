@@ -14,7 +14,9 @@ scaffold versions (`scaffold/VERSION`).
   spoofed role markers, and control characters are neutralized before
   session injection — governance checklist item 4 moves from
   simplified-for-demo to implemented (demo scope).
-- CI: `de doctor` + `de diff` drift check on the freshly built instance.
+- CI: `de doctor` + `de diff` drift check on the freshly built instance,
+  and `de-eval e2e --dry-run` (fixture runtime build + strict-replay
+  wiring, no LLM) on the released skill.
 - Containerized demo: `docker compose up --build` boots the mock Change
   Gateway + governance console; the image build and both endpoints are
   smoke-verified by the `docker-demo` CI job on every push.

@@ -84,6 +84,22 @@ emulates the `claude --output-format stream-json --input-format stream-json
 session spawn/resume/reuse/isolation and the webhook HMAC/verification/
 allowlist/`/reset` flows end to end.
 
+## Hardening behaviors (added post-M6)
+
+- **Inbound sanitization** (`bridge/sanitize.py`): before any chat text is
+  injected into an agent session, envelope tags (`<untrusted_data>`,
+  `<system>`, `<function_results>`, …), line-leading `[role]` markers that
+  mimic the memory recall block, and ASCII control characters are
+  neutralized. Content stays readable; every strip is logged with counts.
+- **Turn timeout** (`sessions.turn_timeout_seconds`, default 300): a turn
+  that exceeds the ceiling stops the subprocess and returns an explicit
+  timeout reply instead of blocking forever. A crashed subprocess likewise
+  yields an explicit error reply; the next message respawns the session
+  with `--resume`.
+- **Demo-secret policy**: binding beyond loopback with the well-known
+  `changeme-demo-secret` refuses to start (`enforce_signing_secret_policy`
+  in `bridge/app.py`); on loopback it warns loudly.
+
 ## Demo simplifications (vs. the full docs/50-bridge design)
 
 - No relay mode — webhook mode only.

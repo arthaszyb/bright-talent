@@ -88,6 +88,8 @@ jobs:
         run: uv run --project eval --extra dev pytest eval/tests -q
       - name: de-eval lint on the released skill (deterministic gate)
         run: uv run --project eval de-eval lint skills/skills/ticket-review
+      - name: de-eval e2e dry-run (fixture runtime + replay wiring, no LLM)
+        run: uv run --project eval de-eval e2e skills/skills/ticket-review --dry-run
 
   shellcheck:
     runs-on: ubuntu-latest
