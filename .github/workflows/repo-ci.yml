@@ -81,6 +81,36 @@ jobs:
       - uses: astral-sh/setup-uv@v3
       - name: pytest
         run: uv run --project eval --extra dev pytest eval/tests -q
+      - name: de-eval lint on the released skill (deterministic gate)
+        run: uv run --project eval de-eval lint skills/skills/ticket-review
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck the de CLI and repo scripts
+        run: shellcheck scaffold/de scripts/leak-check.sh
+
+  docker-demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: compose up
+        run: docker compose up -d --build --wait --wait-timeout 180
+      - name: smoke — gateway serves the seeded ticket
+        run: |
+          curl -sf http://localhost:8801/tickets/1001 | grep '"ticket_id": "1001"'
+      - name: smoke — console sees the instance
+        run: |
+          curl -sf http://localhost:8900/api/instances | grep acme-checkout-sre
+      - name: compose logs on failure
+        if: failure()
+        run: docker compose logs
+      - name: compose down
+        if: always()
+        run: docker compose down
 
   mocks-tests:
     runs-on: ubuntu-latest

@@ -81,7 +81,9 @@ The zero-thought path — build the instance and boot the mock Change Gateway
 (:8801) plus the governance console (:8900) in one command:
 
 ```bash
-make demo
+make demo            # local, uv-based
+# or, containerized (no uv needed, CI-verified on every push):
+docker compose up --build
 ```
 
 The full tour:
@@ -113,6 +115,16 @@ workflow (validate → build-test → mock MR), with every transition written to
 an audit log:
 
 ![Governance console — instance detail](docs/assets/console-instance.png)
+
+A config change never touches the live instance tree: it moves through a
+draft state machine, builds in an isolated workspace, and lands as a merge
+request —
+
+![Draft workflow — validate, build-test, MR](docs/assets/console-draft.png)
+
+— and every transition is an attributable audit event:
+
+![Audit log](docs/assets/console-audit.png)
 
 ## Safety invariants (enforced in code)
 
@@ -177,6 +189,27 @@ Live-verified behavior beyond CI:
 | 9 | Change-freeze override and scenario-tier promotion are recorded, attributable events | **simplified-for-demo** — change-freeze policy pack ships in every build; console writes every draft transition to `audit_events`; override/promotion ceremonies are documented, not enforced |
 
 </details>
+
+## Where this fits
+
+Most open-source agent work concentrates on **orchestration** — graphs,
+crews, tool routers. This repo deliberately does not: the agent runtime is
+Claude Code, unmodified. What it demonstrates is everything an enterprise
+needs *around* the agent before an "AI employee" can be trusted with real
+work, which is where most deployments actually stall:
+
+- a **compiled, drift-detectable runtime** instead of a mutable prompt folder
+- a **versioned capability supply chain** — skills released by git tag
+  through eval gates, pinned by lockfile, with a real caught-regression
+  audit trail
+- **guardrails as code** — permission monotonicity, no-shadowing, tool
+  gating, propose-don't-execute — each with tests that would fail if loosened
+- **governance surfaces** — fleet health, drift, draft-based change control
+  with an audit log
+
+If you're building with LangGraph, CrewAI, or your own loop, the
+orchestration layer differs but these deployment problems are identical —
+the patterns here transfer.
 
 ## Design docs
 

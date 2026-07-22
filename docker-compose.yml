@@ -1,0 +1,31 @@
+# One-command demo: docker compose up --build
+#   Change Gateway → http://localhost:8801/tickets/1001
+#   Governance UI  → http://localhost:8900
+# (The interactive DE session still needs a local authenticated `claude`
+#  CLI — see README quickstart. These two services are fully self-contained.)
+services:
+  change-gateway:
+    build: .
+    command: ["uv", "run", "python", "mocks/change_gateway.py", "--port", "8801"]
+    ports:
+      - "8801:8801"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8801/tickets/1001', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  console:
+    build: .
+    command: ["uv", "run", "--project", "console", "python", "-m", "console.app",
+              "--repo", ".", "--host", "0.0.0.0", "--port", "8900"]
+    ports:
+      - "8900:8900"
+    depends_on:
+      change-gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8900/api/health', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 12

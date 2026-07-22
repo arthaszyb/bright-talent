@@ -1,0 +1,13 @@
+# Keep .git (skills-lock commit resolution + console draft-MR branches).
+.venv/
+**/.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+node_modules/
+eval/runs/
+instances/*/runtime/
+instances/*/editor/
+instances/*/log/
+instances/*/work/
+*.egg-info/

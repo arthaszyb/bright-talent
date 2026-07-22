@@ -10,6 +10,16 @@ scaffold versions (`scaffold/VERSION`).
 ## [Unreleased]
 
 ### Added
+- Containerized demo: `docker compose up --build` boots the mock Change
+  Gateway + governance console; the image build and both endpoints are
+  smoke-verified by the `docker-demo` CI job on every push.
+- Bridge turn timeout (`sessions.turn_timeout_seconds`) and explicit
+  recovery replies when the agent subprocess crashes or hangs, with
+  resilience tests against the fake-claude harness.
+- CI gates: `shellcheck` over the `de` CLI and repo scripts, and the
+  deterministic `de-eval lint` gate on the released skill.
+- README: draft-workflow and audit-log screenshots, and a "Where this
+  fits" positioning section (both languages).
 - Root `Makefile`: `make demo` boots the mock Change Gateway + governance
   console in one command; `make test/lint/leak-check/build` mirror CI
   verbatim.
