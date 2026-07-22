@@ -10,7 +10,7 @@ from .config import Config
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    p = argparse.ArgumentParser(prog="console.app", description="DE fleet governance console")
+    p = argparse.ArgumentParser(prog="console.app", description="intelligent-staff fleet governance console")
     p.add_argument("--repo", required=True, help="Path to the de-demo repo root")
     p.add_argument("--port", type=int, default=8900, help="HTTP port (default 8900)")
     p.add_argument("--host", default="127.0.0.1", help="Bind host (default 127.0.0.1)")

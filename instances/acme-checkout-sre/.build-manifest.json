@@ -62,7 +62,7 @@
     },
     {
       "path": "kb/change-management-principles.md",
-      "sha256": "9bc63992f17214a4793e69089f8889a95a03e818de5d37a233091c9566bf1da8",
+      "sha256": "91c6ff7b3b79ce52a738bb0e8bd0f8bed419da499f806a9cbd24948c043e961a",
       "source": "base"
     },
     {
@@ -72,12 +72,12 @@
     },
     {
       "path": "kb/kb-usage.md",
-      "sha256": "af9b23ed5434a009b49f5cdaa176e6bbaf32e52d05194c252f37518c26d5a678",
+      "sha256": "082e72783674cb0b99817650401211aad14a2d12a069372d5f9fcc5b39059df4",
       "source": "base"
     },
     {
       "path": "kb/team/_index.md",
-      "sha256": "597af5635668b809be4f95f1eedaaa329d585d6c8f37bdf8bfcde039407c3607",
+      "sha256": "4b842f9c1259335e064600ed642c856db1fb4bc9c72881f88c560c80d9ffdbf1",
       "source": "instance"
     },
     {
@@ -87,12 +87,12 @@
     },
     {
       "path": "kb/team/checkout-oncall-runbook.md",
-      "sha256": "667298f2af43c8bf5603605a8a77f654f1466aa2405fd537530ebdf61bcbe360",
+      "sha256": "08a98c347a5e34f23d34cde6a977d4ed5bed7903ef23ea04c124b243133c4a62",
       "source": "instance"
     },
     {
       "path": "kb/team/service-overview.md",
-      "sha256": "40b7879fe08cce7cb62e58f5dbcbcfb9ccf63f4644c5833557e5850a3ced99fc",
+      "sha256": "380b30094751d2034e8f7aced41e299cbac9271dac286ba21d43ccbbee78cf3f",
       "source": "instance"
     },
     {
@@ -167,7 +167,7 @@
     },
     {
       "path": "CLAUDE.md",
-      "sha256": "bcb810b94bd54c02d67be5fd236f4035655aaeb26b013b50edc9dbca24a04c57",
+      "sha256": "781ae095e4b97e668bb4f4ca397d34d5d31971168a66a33f1c445edfe7d2f590",
       "source": "template"
     },
     {

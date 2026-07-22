@@ -69,7 +69,7 @@ scaffold versions (`scaffold/VERSION`).
 
 ## [0.1.0] — initial public snapshot
 
-Six-layer Digital Employee platform demo: scaffold (security floor +
+Six-layer intelligent-staff platform demo: scaffold (security floor +
 deterministic builder + `de` CLI), one reference instance, versioned skill
 registry with release gates, `de-eval` harness (lint / triggers / safety /
 e2e strict replay), chat bridge, governance console, and mock Change

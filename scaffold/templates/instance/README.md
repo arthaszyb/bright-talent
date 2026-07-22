@@ -1,6 +1,6 @@
-# DE Instance Repository
+# intelligent-staff Instance Repository
 
-This repository contains the configuration and knowledge base for a **Digital Employee** instance.
+This repository contains the configuration and knowledge base for a **intelligent staff** instance.
 
 ## Quick start
 
@@ -14,7 +14,7 @@ This repository contains the configuration and knowledge base for a **Digital Em
    make build
    ```
 
-3. **Start a conversation with the DE:**
+3. **Start a conversation with the intelligent-staff worker:**
    ```bash
    ./de start
    ```

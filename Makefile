@@ -37,7 +37,7 @@ build:
 	cd instances/acme-checkout-sre && ../../scaffold/de validate . && ../../scaffold/de build .
 
 # One-command demo: mock gateway + governance console against this repo.
-# (The interactive DE session itself needs an authenticated `claude` CLI:
+# (The interactive intelligent-staff session itself needs an authenticated `claude` CLI:
 #  cd instances/acme-checkout-sre && ../../scaffold/de start .)
 demo: build
 	@echo ""

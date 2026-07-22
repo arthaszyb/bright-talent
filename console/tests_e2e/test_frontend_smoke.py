@@ -91,7 +91,7 @@ def test_fleet_renders_single_instance_card_exactly_once(page, console_url):
 def test_header_and_tabs_present(page, console_url):
     page.goto(f"{console_url}/#/fleet")
     page.wait_for_selector("header, nav.tabs")
-    assert "DE Fleet Governance Console" in page.content()
+    assert "Staff Fleet Governance Console" in page.content()
 
 
 def test_instance_detail_shows_identity(page, console_url):

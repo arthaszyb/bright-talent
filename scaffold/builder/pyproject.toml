@@ -1,7 +1,7 @@
 [project]
 name = "builder"
 version = "0.1.0"
-description = "DE scaffold builder — composes runtime/ from base + instance config"
+description = "intelligent-staff scaffold builder — composes runtime/ from base + instance config"
 requires-python = ">=3.11"
 dependencies = [
     "jinja2>=3.1",

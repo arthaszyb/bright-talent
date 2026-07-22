@@ -1,4 +1,4 @@
-// DE Fleet Governance Console -- plain JS SPA, no build step, no CDN.
+// Staff Fleet Governance Console -- plain JS SPA, no build step, no CDN.
 // Hash-based routing: #/fleet, #/instances/:id, #/drafts/:id, #/audit
 
 const app = document.getElementById("app");

@@ -91,7 +91,7 @@ run_builder() {
 
 usage() {
   cat <<'EOF'
-de — the Digital Employee instance CLI
+de — the intelligent-staff instance CLI
 
 Usage: de <command> [instance_dir] [options]
 

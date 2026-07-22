@@ -3,7 +3,7 @@ schema_version: 1
 identity:
   id: DE-ACME-CHECKOUT-001
   team: acme-checkout-sre
-  description: "Digital Employee for the Acme Corp storefront checkout SRE team"
+  description: "intelligent-staff worker for the Acme Corp storefront checkout SRE team"
 
 scope:
   service_catalog:
@@ -51,7 +51,7 @@ claude_md:
 
     ## Change Gateway Policy
 
-    All proposed changes go through the Change Gateway at http://localhost:8801. The DE analyzes and proposes changes, but never executes them directly. The Change Gateway:
+    All proposed changes go through the Change Gateway at http://localhost:8801. The intelligent-staff worker analyzes and proposes changes, but never executes them directly. The Change Gateway:
     - Accepts proposals via POST /changes
     - Evaluates risk using the mentors' thresholds
     - Routes to mentors for final approval

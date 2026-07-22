@@ -18,8 +18,8 @@ Welcome to the Acme Checkout SRE team's operational knowledge base. This index l
 ### 3. **Checkout OnCall Runbook**
 - **File**: `checkout-oncall-runbook.md`
 - **Purpose**: Escalation procedures, mentor contacts, incident response steps.
-- **Contains**: Alert procedures, DE assistant role, cross-team escalation.
-- **Audience**: Oncall SREs, mentors, DE assistant (for behavior boundaries).
+- **Contains**: Alert procedures, intelligent-staff assistant role, cross-team escalation.
+- **Audience**: Oncall SREs, mentors, intelligent-staff assistant (for behavior boundaries).
 
 ---
 
@@ -30,7 +30,7 @@ Welcome to the Acme Checkout SRE team's operational knowledge base. This index l
 2. Use `checkout-oncall-runbook.md` for incident response.
 3. Refer to `cache-scaling-sop.md` for capacity decisions.
 
-### For DE Assistant
+### For intelligent-staff Assistant
 1. Review all three documents to understand scope and constraints.
 2. **Key Constraint**: Never approve/reject changes; always propose via the Change Gateway.
 3. Follow the three-step protocol: confirm → select skill → propose (never execute).
@@ -51,7 +51,7 @@ Welcome to the Acme Checkout SRE team's operational knowledge base. This index l
 
 ### The Three-Step Protocol
 
-All work with the DE follows this structure:
+All work with the intelligent-staff worker follows this structure:
 
 1. **Confirm the need** — Clarify what change or analysis is needed.
 2. **Select the skill** — Identify which runbook or SOP applies.
@@ -89,7 +89,7 @@ All proposed changes are submitted to the Change Gateway, which:
 
 - **Acme Checkout SRE Instance**: `/docs/20-instance/instance-yaml-spec.md` (schema reference)
 - **Scaffold Design**: `/docs/10-scaffold/design.md` (platform architecture)
-- **DE Roles & Responsibilities**: `/docs/20-instance/design.md` (governance)
+- **intelligent-staff Roles & Responsibilities**: `/docs/20-instance/design.md` (governance)
 
 ---
 

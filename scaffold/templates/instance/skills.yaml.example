@@ -1,4 +1,4 @@
-# skills.yaml — Skill dependencies for this DE instance
+# skills.yaml — Skill dependencies for this intelligent-staff instance
 # Validated and locked at build time; the builder resolves each dependency
 # against its registry, pins tag -> commit, installs into runtime/.claude/skills/,
 # and writes skills-lock.json.

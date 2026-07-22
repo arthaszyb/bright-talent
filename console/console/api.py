@@ -41,7 +41,7 @@ class ActorRequest(BaseModel):
 
 
 def build_app(config: Config) -> FastAPI:
-    app = FastAPI(title="DE Fleet Governance Console")
+    app = FastAPI(title="Staff Fleet Governance Console")
     db = Database(config.resolved_db_path)
     scanner = RepoScanner(config)
     ci_provider = MockCIProvider()

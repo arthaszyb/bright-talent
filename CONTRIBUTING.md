@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in the Digital Employee platform demo. This page is
+Thanks for your interest in the intelligent-staff platform demo. This page is
 the short version; `ARCHITECTURE.md` (binding conventions) and `DESIGN.md`
 (seam contracts, deviation register) are the authoritative design docs.
 

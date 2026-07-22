@@ -1,6 +1,6 @@
 # Skills Repository
 
-This directory contains reusable Claude skills for the DE platform.
+This directory contains reusable Claude skills for the intelligent-staff worker platform.
 
 ## Layout
 

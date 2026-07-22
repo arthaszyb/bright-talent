@@ -1,10 +1,10 @@
-# Makefile — Standard build targets for the Acme Checkout SRE DE instance
+# Makefile — Standard build targets for the Acme Checkout SRE intelligent-staff instance
 # Delegates to the ./de CLI; see ../../scaffold/de --help for details
 
 .PHONY: help build rebuild validate verify upgrade status diff clean start serve doctor
 
 help:
-	@echo "DE Instance: acme-checkout-sre"
+	@echo "intelligent-staff Instance: acme-checkout-sre"
 	@echo "=============================="
 	@echo ""
 	@echo "Build targets:"

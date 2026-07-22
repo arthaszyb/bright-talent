@@ -1,4 +1,4 @@
-# DE Demo — Digital Employee Platform
+# Intelligent Staff — Enterprise AI Worker Platform
 
 **English** | [简体中文](README.zh-CN.md)
 
@@ -9,13 +9,13 @@
 [![Built on Claude Code](https://img.shields.io/badge/built%20on-Claude%20Code-d97757.svg)](https://claude.com/claude-code)
 
 An open-source, end-to-end runnable reference implementation of an enterprise
-**Digital Employee (DE) platform**: AI teammates built on Claude Code,
+**intelligent-staff platform**: AI teammates built on Claude Code,
 deployed the way an enterprise would actually deploy them — declarative
 instances on a hardened scaffold, versioned skills behind CI gates, an
 evaluation harness with strict replay, a chat bridge, and a governance
 console.
 
-The thesis: **a digital employee is not a chatbot.** It is a governed,
+The thesis: **an intelligent-staff worker is not a chatbot.** It is a governed,
 versioned, sandboxed AI worker whose safety properties are enforced *in
 code, not prose* — and this repo shows the whole lifecycle, small enough to
 read in an afternoon.
@@ -44,7 +44,7 @@ flowchart LR
     end
 
     subgraph RUNTIME
-        de["DE instance runtime<br/>compiled, sha256 manifest"]
+        de["intelligent-staff instance runtime<br/>compiled, sha256 manifest"]
     end
 
     subgraph EXECUTION
@@ -64,7 +64,7 @@ Six layers, one honest boundary each:
 | Directory | Layer | What it is |
 |---|---|---|
 | `scaffold/` | PLATFORM | Security floor (6 hooks, 4 policy packs), Jinja2 templates, the 14-phase deterministic builder, and the `de` CLI |
-| `instances/acme-checkout-sre/` | RUNTIME | A declarative DE instance: `instance.yaml` + team knowledge base; `runtime/` is compiled, never hand-edited |
+| `instances/acme-checkout-sre/` | RUNTIME | A declarative intelligent-staff instance: `instance.yaml` + team knowledge base; `runtime/` is compiled, never hand-edited |
 | `skills/` | SUPPLY | Versioned skill registry (`ticket-review`, released by git tag) + CI gate scripts |
 | `eval/` | SUPPLY | `de-eval`: lint / triggers / safety / e2e gates with PATH-shim strict replay and a pinned LLM judge |
 | `bridge/` | ACCESS | Chat webhook bridge: HMAC-verified events → persistent Claude sessions with memory injection |
@@ -75,7 +75,7 @@ Six layers, one honest boundary each:
 
 Prereqs: [`uv`](https://docs.astral.sh/uv/), `git`, and an authenticated
 [`claude` CLI](https://claude.com/claude-code) (only needed for the
-interactive DE session).
+interactive intelligent-staff session).
 
 The zero-thought path — build the instance and boot the mock Change Gateway
 (:8801) plus the governance console (:8900) in one command:
@@ -92,11 +92,11 @@ The full tour:
 # 1. Start the mock Change Gateway (keep it running)
 uv run python mocks/change_gateway.py --port 8801 &
 
-# 2. Build and talk to the DE
+# 2. Build and talk to the intelligent-staff worker
 cd instances/acme-checkout-sre
 ../../scaffold/de validate .
 ../../scaffold/de build .
-../../scaffold/de start .          # interactive session inside the DE runtime
+../../scaffold/de start .          # interactive session inside the intelligent-staff worker runtime
 # try: "Please review this scaling ticket: https://gateway.acme.example/tickets/1002"
 
 # 3. Governance console (separate terminal, from repo root)
@@ -129,7 +129,7 @@ request —
 ## Safety invariants (enforced in code)
 
 - **Propose, don't execute** — risky changes become Change Gateway tickets;
-  the DE reviews and comments, humans decide. The `ticket-review` skill never
+  the intelligent-staff worker reviews and comments, humans decide. The `ticket-review` skill never
   emits approve/reject language (eval-gated).
 - **Skill-gated tools** — a PreToolUse hook denies tool use outside an active
   skill's contract; prompt-injection and escalation-bypass probes are seeded
@@ -154,7 +154,7 @@ configured.
 
 Live-verified behavior beyond CI:
 
-- Live scope check — the DE states exactly `acme.storefront.checkout` +
+- Live scope check — the intelligent-staff worker states exactly `acme.storefront.checkout` +
   `cart` and its propose-only stance.
 - Live skill runs — ticket 1001 → PASS review, 1002 → FAIL citing SOP R2/R3,
   both comment-only.

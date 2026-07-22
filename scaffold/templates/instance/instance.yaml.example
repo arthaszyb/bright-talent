@@ -1,4 +1,4 @@
-# instance.yaml — DE instance configuration
+# instance.yaml — intelligent-staff instance configuration
 # Schema version 1 (required).
 # Full field reference: docs/10-scaffold/instance-yaml-spec.md
 
@@ -11,10 +11,10 @@ identity:
   # Human-readable team name
   team: acme-example
   # Optional description of this team's scope and mission
-  description: "Digital Employee for the Acme Corp example team"
+  description: "intelligent-staff worker for the Acme Corp example team"
 
 # === SCOPE (required) — the security boundary ===
-# Strictly list the service catalog paths this DE may touch.
+# Strictly list the service catalog paths this intelligent-staff worker may touch.
 # Any request outside this list is declined and escalated.
 scope:
   service_catalog:

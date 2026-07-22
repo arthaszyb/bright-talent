@@ -1,6 +1,6 @@
-# Acme Checkout SRE — Digital Employee Instance
+# Acme Checkout SRE — Intelligent Staff Instance
 
-This is the configuration repository for the **DE-ACME-CHECKOUT-001** Digital Employee instance, serving the Acme Checkout SRE team.
+This is the configuration repository for the **DE-ACME-CHECKOUT-001** intelligent-staff instance, serving the Acme Checkout SRE team.
 
 ## What This Instance Does
 
@@ -97,7 +97,7 @@ Team-specific runbooks:
 - **_index.md**: Navigation and role-based quick links
 - **service-overview.md**: Service architecture, dependencies, team structure
 - **cache-scaling-sop.md**: Scaling rules R1 (80% memory), R2 (2+ replicas), R3 (7-day cooldown)
-- **checkout-oncall-runbook.md**: Incident response, escalation ladder, DE constraints
+- **checkout-oncall-runbook.md**: Incident response, escalation ladder, intelligent-staff constraints
 
 ---
 
@@ -143,7 +143,7 @@ make doctor        # Environment checks
 
 ## Change Gateway Integration
 
-All changes proposed by the DE are logged at:
+All changes proposed by the intelligent-staff worker are logged at:
 ```
 http://localhost:8801/changes
 ```
@@ -154,7 +154,7 @@ The Change Gateway:
 - Routes to mentors for approval
 - Logs events for audit and compliance
 
-**Key Rule**: The DE never executes changes directly. All proposals are reviewed and approved by mentors through the Change Gateway.
+**Key Rule**: The intelligent-staff worker never executes changes directly. All proposals are reviewed and approved by mentors through the Change Gateway.
 
 ---
 
@@ -226,7 +226,7 @@ All validation must pass before the instance can be deployed.
 
 ## License & Governance
 
-This instance is governed by the Acme Checkout SRE team and the DE Platform team. All changes must be reviewed via the Change Gateway before deployment.
+This instance is governed by the Acme Checkout SRE team and the intelligent-staff worker Platform team. All changes must be reviewed via the Change Gateway before deployment.
 
 ---
 

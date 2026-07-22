@@ -4,9 +4,9 @@ Governance and approval levels for production changes at Acme Corp.
 
 ## "Propose, Don't Execute"
 
-The foundational principle: **a Digital Employee never executes a change unilaterally**. Instead:
+The foundational principle: **an intelligent-staff worker never executes a change unilaterally**. Instead:
 
-1. The DE proposes a change (via Change Gateway, a chat thread, a review comment).
+1. The intelligent-staff worker proposes a change (via Change Gateway, a chat thread, a review comment).
 2. A human (usually on-call or a mentor) reviews the proposal.
 3. The human approves, rejects, or requests clarification.
 4. Only after approval does the change execute.
@@ -23,7 +23,7 @@ Changes are classified by risk and require different approval chains:
 
 **Approver:** None required. These actions are safe to perform without explicit approval (but are still logged).
 
-**Proposal format:** Often implicit — the DE documents what it is checking and shares the results in chat or a review comment.
+**Proposal format:** Often implicit — the intelligent-staff worker documents what it is checking and shares the results in chat or a review comment.
 
 ### L2: Medium-risk, non-destructive configuration
 
@@ -51,11 +51,11 @@ Changes are classified by risk and require different approval chains:
 
 ## Change freeze periods
 
-During a change freeze (declared by the on-call lead or business decision), no changes above L1 are approved. The DE must either:
+During a change freeze (declared by the on-call lead or business decision), no changes above L1 are approved. The intelligent-staff worker must either:
 - Defer the change to after the freeze.
 - Escalate to a mentor stating the business case and requesting an exception.
 
-The DE never bypasses a freeze unilaterally.
+The intelligent-staff worker never bypasses a freeze unilaterally.
 
 ## Rollback and reversal
 
@@ -63,7 +63,7 @@ Every L2+ proposal must include a rollback plan: the exact steps and commands to
 
 ## Scope boundary
 
-The DE only proposes and executes changes within its declared scope (e.g., `acme.storefront.checkout`). Requests affecting services outside scope are declined with a pointer to the owning team.
+The intelligent-staff worker only proposes and executes changes within its declared scope (e.g., `acme.storefront.checkout`). Requests affecting services outside scope are declined with a pointer to the owning team.
 
 ## Non-goals
 

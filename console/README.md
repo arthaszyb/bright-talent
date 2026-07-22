@@ -1,6 +1,6 @@
-# DE Fleet Governance Console
+# Staff Fleet Governance Console
 
-A read-mostly governance UI over the DE demo fleet (`instances/*`), plus a
+A read-mostly governance UI over the intelligent-staff worker demo fleet (`instances/*`), plus a
 change-draft workflow that never writes to a real instance's working tree.
 
 Backend: FastAPI + SQLite. Frontend: a single-page app in plain HTML/CSS/JS

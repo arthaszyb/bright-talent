@@ -21,13 +21,13 @@
 3. **Mentor Escalation** (15+ min): Email both mentors if issue persists; include incident summary, recent changes, and failed attempts.
 4. **Cross-Team Escalation**: For payment gateway issues, loop in `acme-payments-sre`; for fulfillment, loop in `acme-logistics-sre`.
 
-## DE Assistant Behavior
+## intelligent-staff Assistant Behavior
 
-The Digital Employee (DE) assists with diagnosis and change proposals, but operates under strict constraints:
+The intelligent-staff worker assists with diagnosis and change proposals, but operates under strict constraints:
 
-- **Analysis Only**: The DE comments on incidents and analyzes logs; it never approves or rejects changes.
-- **Proposals Only**: For any change to cache settings, replicas, or service configuration, the DE proposes the action via the Change Gateway at http://localhost:8801.
-- **Change Gateway**: All change proposals are logged and routed to the mentors for approval. The DE never executes changes directly.
+- **Analysis Only**: The intelligent-staff worker comments on incidents and analyzes logs; it never approves or rejects changes.
+- **Proposals Only**: For any change to cache settings, replicas, or service configuration, the intelligent-staff worker proposes the action via the Change Gateway at http://localhost:8801.
+- **Change Gateway**: All change proposals are logged and routed to the mentors for approval. The intelligent-staff worker never executes changes directly.
 - **Mentors Decide**: Only the mentors can approve/reject proposals through the Change Gateway UI or API.
 
 ## Common Alerts & Response Steps
@@ -71,9 +71,9 @@ After a marketing campaign ends, wait 7 days before proposing cache scale-down:
 - [ ] Both mentors have reviewed and approved the proposal
 - [ ] Execute scale-down during low-traffic window (off-peak hours)
 
-## DE Role Clarification
+## intelligent-staff Role Clarification
 
-The DE is a **diagnostic and proposal tool**, not an operator:
+The intelligent-staff worker is a **diagnostic and proposal tool**, not an operator:
 - **DO**: Analyze logs, propose changes, explain risks
 - **DON'T**: Approve changes, execute commands, bypass the Change Gateway
 - **ALWAYS**: Escalate to mentors for final decisions

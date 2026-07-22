@@ -1,6 +1,6 @@
 # How to Use the Knowledge Base
 
-The DE's knowledge base is a searchable, structured collection of runbooks, SOPs, incident postmortems, and foundational principles. This page explains how the agent searches it.
+The intelligent-staff's knowledge base is a searchable, structured collection of runbooks, SOPs, incident postmortems, and foundational principles. This page explains how the agent searches it.
 
 ## The KB directory structure
 
@@ -27,9 +27,9 @@ This is intentionally manual — the agent reasons about what to search for, rea
 
 ## Best practices for KB authoring
 
-**For operations:** write for section-level citation. Every SOP/runbook should have clear, stable headers (`## Thresholds`, `## Escalation`, `## Rollback steps`) so the DE can point to `kb/team/runbooks/foo.md#thresholds` rather than a vague "somewhere in the runbook."
+**For operations:** write for section-level citation. Every SOP/runbook should have clear, stable headers (`## Thresholds`, `## Escalation`, `## Rollback steps`) so the intelligent-staff worker can point to `kb/team/runbooks/foo.md#thresholds` rather than a vague "somewhere in the runbook."
 
-**For skills:** if a skill enforces a rule or SOP, the skill's documentation should cite the exact KB page and section it is enforcing. This way, when the DE applies the rule, a human auditor can go read the rule directly, not just trust the agent's paraphrase.
+**For skills:** if a skill enforces a rule or SOP, the skill's documentation should cite the exact KB page and section it is enforcing. This way, when the intelligent-staff worker applies the rule, a human auditor can go read the rule directly, not just trust the agent's paraphrase.
 
 **Keep it curated:** the KB is not a general-purpose corpus — it is a team's accumulated, reviewed ops documentation. If it grows beyond a few hundred pages, grep search degrades in precision and latency; at that point, consider a different retrieval strategy (outside the scope of this platform).
 

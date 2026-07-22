@@ -39,4 +39,4 @@ def test_health_liveness(app_client):
 def test_frontend_served(app_client):
     resp = app_client.get("/")
     assert resp.status_code == 200
-    assert b"DE Fleet Governance Console" in resp.content
+    assert b"Staff Fleet Governance Console" in resp.content

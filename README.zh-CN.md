@@ -1,4 +1,4 @@
-# DE Demo — 数字员工平台（Digital Employee Platform）
+# Intelligent Staff — 智能员工平台（Intelligent Staff Platform）
 
 [English](README.md) | **简体中文**
 
@@ -8,11 +8,11 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 [![Built on Claude Code](https://img.shields.io/badge/built%20on-Claude%20Code-d97757.svg)](https://claude.com/claude-code)
 
-一个开源、端到端可运行的企业级**数字员工（Digital Employee，DE）平台**参考实现：
+一个开源、端到端可运行的企业级**智能员工（intelligent staff）平台**参考实现：
 基于 Claude Code 构建的 AI 同事，按企业真实的部署方式落地——声明式实例 + 加固脚手架、
 经 CI 门禁发布的版本化技能、带严格回放的评测框架、聊天桥接服务，以及治理控制台。
 
-核心命题：**数字员工不是聊天机器人。** 它是一个受治理、有版本、被沙箱约束的 AI
+核心命题：**智能员工不是聊天机器人。** 它是一个受治理、有版本、被沙箱约束的 AI
 工作者，其安全属性由**代码而非文档**强制执行——本仓库展示了完整生命周期，
 一个下午就能读完。
 
@@ -40,7 +40,7 @@ flowchart LR
     end
 
     subgraph 运行时[RUNTIME 运行时]
-        de["DE 实例运行时<br/>编译产物 + sha256 清单"]
+        de["智能员工实例运行时<br/>编译产物 + sha256 清单"]
     end
 
     subgraph 执行层[EXECUTION 执行]
@@ -60,7 +60,7 @@ flowchart LR
 | 目录 | 层 | 内容 |
 |---|---|---|
 | `scaffold/` | PLATFORM | 安全地板（6 个钩子、4 组策略包）、Jinja2 模板、14 阶段确定性构建器、`de` CLI |
-| `instances/acme-checkout-sre/` | RUNTIME | 声明式 DE 实例：`instance.yaml` + 团队知识库；`runtime/` 是编译产物，永不手改 |
+| `instances/acme-checkout-sre/` | RUNTIME | 声明式智能员工实例：`instance.yaml` + 团队知识库；`runtime/` 是编译产物，永不手改 |
 | `skills/` | SUPPLY | 版本化技能仓库（`ticket-review`，git tag 发布）+ CI 门禁脚本 |
 | `eval/` | SUPPLY | `de-eval`：lint / triggers / safety / e2e 门禁，PATH-shim 严格回放 + 固定版本的 LLM 裁判 |
 | `bridge/` | ACCESS | 聊天 webhook 桥接：HMAC 校验事件 → 持久 Claude 会话 + 记忆注入 |
@@ -70,7 +70,7 @@ flowchart LR
 ## 五分钟上手
 
 前置：[`uv`](https://docs.astral.sh/uv/)、`git`，以及已认证的
-[`claude` CLI](https://claude.com/claude-code)（仅交互式 DE 会话需要）。
+[`claude` CLI](https://claude.com/claude-code)（仅交互式智能员工会话需要）。
 
 零思考路径——一条命令完成实例构建并拉起 mock 变更网关（:8801）+
 治理控制台（:8900）：
@@ -87,11 +87,11 @@ docker compose up --build
 # 1. 启动 mock 变更网关（保持运行）
 uv run python mocks/change_gateway.py --port 8801 &
 
-# 2. 构建并与 DE 对话
+# 2. 构建并与智能员工对话
 cd instances/acme-checkout-sre
 ../../scaffold/de validate .
 ../../scaffold/de build .
-../../scaffold/de start .          # 进入 DE 运行时的交互会话
+../../scaffold/de start .          # 进入智能员工运行时的交互会话
 # 试试："Please review this scaling ticket: https://gateway.acme.example/tickets/1002"
 
 # 3. 治理控制台（另开终端，在仓库根目录）
@@ -121,7 +121,7 @@ MR），每次状态迁移都写入审计日志：
 
 ## 安全不变量（代码强制执行）
 
-- **只提议，不执行** —— 高风险变更变成变更网关工单；DE 负责评审和评论，
+- **只提议，不执行** —— 高风险变更变成变更网关工单；智能员工负责评审和评论，
   人类做决定。`ticket-review` 技能永不输出批准/拒绝性措辞（由评测门禁保证）。
 - **技能门控工具** —— PreToolUse 钩子拒绝任何超出当前技能契约的工具调用；
   提示注入与越权升级探针作为护栏测试注入每一次构建。
@@ -141,7 +141,7 @@ e2e → tag`）；配置 `ANTHROPIC_API_KEY` secret 后，LLM 驱动的门禁会
 
 CI 之外的实测行为：
 
-- 实测边界检查 —— DE 精确报出 `acme.storefront.checkout` + `cart` 的
+- 实测边界检查 —— 智能员工精确报出 `acme.storefront.checkout` + `cart` 的
   服务范围与"只提议"的立场。
 - 实测技能运行 —— 工单 1001 → 评审 PASS，1002 → 引用 SOP R2/R3 判 FAIL，
   两者都仅限评论。

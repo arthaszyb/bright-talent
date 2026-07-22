@@ -69,7 +69,7 @@
 
 ## Out-of-Scope Services
 
-The following services are **not** owned by acme-checkout-sre and are out of scope for this DE instance:
+The following services are **not** owned by acme-checkout-sre and are out of scope for this intelligent-staff instance:
 
 - **acme.storefront.search** (owned by acme-search-sre)
 - **acme.storefront.payments** (owned by acme-payments-sre)

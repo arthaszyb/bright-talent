@@ -1,10 +1,10 @@
-# Makefile — Standard build targets for a DE instance
+# Makefile — Standard build targets for an intelligent-staff worker instance
 # Managed file: do not hand-edit. Scaffold upgrades may update it.
 
 .PHONY: help build rebuild validate verify upgrade status diff clean start serve
 
 help:
-	@echo "DE instance targets:"
+	@echo "intelligent-staff instance targets:"
 	@echo "  make build       — validate, build, doctor, status"
 	@echo "  make rebuild     — clean + build"
 	@echo "  make validate    — schema + VERSION validation"
