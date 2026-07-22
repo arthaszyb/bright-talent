@@ -142,7 +142,9 @@ jobs:
         skill: [ticket-review]
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0, token: ${{ secrets.RELEASE_BOT_TOKEN }} }
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_BOT_TOKEN }}
       - uses: astral-sh/setup-uv@v3
       - name: resolve released version
         id: ver

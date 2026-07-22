@@ -24,6 +24,12 @@ jobs:
       - uses: astral-sh/setup-uv@v3
       - name: ruff
         run: uvx ruff check .
+      - name: workflow YAML must parse
+        # A workflow with a YAML error fails every push with a jobless run;
+        # catch it here where the diff is visible.
+        run: |
+          uv run --no-project --with pyyaml python -c \
+            "import glob, yaml; [yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')]; print('workflows parse OK')"
 
   leak-check:
     runs-on: ubuntu-latest
@@ -47,16 +53,25 @@ jobs:
           ../../scaffold/de validate .
           ../../scaffold/de build .
       - name: committed build metadata must match a fresh build
-        working-directory: instances/acme-checkout-sre
-        run: git diff --exit-code -- .build-manifest.json .managed-files.json
+        # .managed-files.json carries a per-build synced_at timestamp, so it
+        # is compared with that field normalized away; the manifest must be
+        # byte-identical.
+        run: |
+          git diff --exit-code -- instances/acme-checkout-sre/.build-manifest.json
+          git show HEAD:instances/acme-checkout-sre/.managed-files.json \
+            | python3 scripts/normalize-managed-files.py - > /tmp/committed-managed.json
+          python3 scripts/normalize-managed-files.py \
+            instances/acme-checkout-sre/.managed-files.json > /tmp/fresh-managed.json
+          diff /tmp/committed-managed.json /tmp/fresh-managed.json
       - name: build determinism — second build must be byte-identical
         working-directory: instances/acme-checkout-sre
         run: |
           cp .build-manifest.json /tmp/first-build-manifest.json
-          cp .managed-files.json /tmp/first-managed-files.json
+          python3 ../../scripts/normalize-managed-files.py .managed-files.json > /tmp/first-managed.json
           ../../scaffold/de build .
           diff /tmp/first-build-manifest.json .build-manifest.json
-          diff /tmp/first-managed-files.json .managed-files.json
+          python3 ../../scripts/normalize-managed-files.py .managed-files.json > /tmp/second-managed.json
+          diff /tmp/first-managed.json /tmp/second-managed.json
 
   eval-tests:
     runs-on: ubuntu-latest
