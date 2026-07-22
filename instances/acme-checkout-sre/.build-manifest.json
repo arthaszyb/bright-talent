@@ -27,7 +27,7 @@
     },
     {
       "path": ".claude/hooks/skill-gate.py",
-      "sha256": "efbf3ab5630b4943a20f5088e4f3d87f5c99d9e077a3f8b472f5d922437462df",
+      "sha256": "1e6ba2d26752f941cb3ccdc0aa4d838171dae257dbb408c68f7afc7b28989af9",
       "source": "base"
     },
     {

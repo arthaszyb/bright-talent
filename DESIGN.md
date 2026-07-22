@@ -79,7 +79,7 @@ This document is the binding integration design. `ARCHITECTURE.md` fixes layout/
 | D5 | Transcript shipping to append-only external storage, retention, access control | deferred-with-note |
 | D6 | Per-instance service accounts / secret store: `.env` + placeholders only | deferred-with-note |
 | D7 | CLI/model pinned by recording versions in `.build-info.json`; no canary fleet | simplified-for-demo |
-| D8 | skill-gate flag set on Skill PreToolUse (not post-success); hooks via system python3 (stdlib) | simplified-for-demo |
+| D8 | skill-gate flag set on Skill PreToolUse (not post-success); hooks via system python3 (stdlib). Hardened post-M6: malformed hook input fails closed, and the flag is a time-boxed window (`DE_SKILL_GATE_TTL_SECONDS`, default 900s, refreshed per Skill call) instead of a permanent session grant | simplified-for-demo |
 | D9 | de-eval command-replay fixtures match on command prefix only, not argument content — a downstream fixture can't detect that an upstream step actually failed/was faked; verified live via the strict-replay double proof (S5) | simplified-for-demo |
 
 ## 5. Risk register and mitigations
