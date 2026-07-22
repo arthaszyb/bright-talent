@@ -14,6 +14,10 @@ scaffold versions (`scaffold/VERSION`).
   spoofed role markers, and control characters are neutralized before
   session injection — governance checklist item 4 moves from
   simplified-for-demo to implemented (demo scope).
+- Browser smoke tests for the console SPA (`console/tests_e2e/`,
+  playwright) guarding the render contract — including a regression test
+  for the startup double-render that once duplicated every fleet card —
+  run in CI as `frontend-e2e`.
 - CI: `de doctor` + `de diff` drift check on the freshly built instance,
   and `de-eval e2e --dry-run` (fixture runtime build + strict-replay
   wiring, no LLM) on the released skill.

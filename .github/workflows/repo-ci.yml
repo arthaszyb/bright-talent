@@ -119,6 +119,22 @@ jobs:
         if: always()
         run: docker compose down
 
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: build instance runtime (fleet health needs it)
+        working-directory: instances/acme-checkout-sre
+        run: |
+          ../../scaffold/de build .
+          git checkout -- .
+      - name: install chromium
+        run: uv run --project console --extra e2e playwright install chromium --with-deps
+      - name: browser smoke tests
+        run: uv run --project console --extra e2e pytest console/tests_e2e -q
+
   mocks-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 10
