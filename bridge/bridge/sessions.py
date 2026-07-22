@@ -16,6 +16,17 @@ logger = logging.getLogger(__name__)
 
 SCHEMA_VERSION = 4
 
+# User-visible replies for the two agent-side failure modes. The session is
+# stopped in both cases; the next message respawns it (resuming session_id).
+AGENT_DIED_REPLY = (
+    "(bridge) the agent session ended unexpectedly and has been reset — "
+    "please resend your message."
+)
+AGENT_TIMEOUT_REPLY = (
+    "(bridge) the agent did not finish responding within {timeout}s; the "
+    "session has been reset — please retry."
+)
+
 
 def _now_iso() -> str:
     return datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -208,16 +219,37 @@ class SessionManager:
         if proc is None or proc.stdin is None or proc.stdout is None:
             return ""
         frame = json.dumps({"type": "user", "message": {"role": "user", "content": text}}) + "\n"
-        proc.stdin.write(frame.encode("utf-8"))
-        await proc.stdin.drain()
+        try:
+            proc.stdin.write(frame.encode("utf-8"))
+            await proc.stdin.drain()
+        except (BrokenPipeError, ConnectionResetError, OSError) as e:
+            logger.warning("sessions: cannot write to subprocess for %s: %s", sess.key, e)
+            await self._stop_process(sess)
+            return AGENT_DIED_REPLY
+
+        timeout = max(1, int(self.config.sessions.turn_timeout_seconds))
+        deadline = asyncio.get_running_loop().time() + timeout
 
         buffer: list[str] = []
         reply_text = ""
         turn_ended = False
+        agent_died = False
         while not turn_ended:
-            line = await proc.stdout.readline()
+            remaining = deadline - asyncio.get_running_loop().time()
+            if remaining <= 0:
+                logger.warning("sessions: turn timed out after %ss for %s", timeout, sess.key)
+                await self._stop_process(sess)
+                return AGENT_TIMEOUT_REPLY.format(timeout=timeout)
+            try:
+                line = await asyncio.wait_for(proc.stdout.readline(), timeout=remaining)
+            except asyncio.TimeoutError:
+                logger.warning("sessions: turn timed out after %ss for %s", timeout, sess.key)
+                await self._stop_process(sess)
+                return AGENT_TIMEOUT_REPLY.format(timeout=timeout)
             if not line:
                 logger.warning("sessions: subprocess stdout closed mid-turn for %s", sess.key)
+                await self._stop_process(sess)
+                agent_died = True
                 break
             line = line.decode("utf-8", errors="replace").strip()
             if not line:
@@ -263,6 +295,8 @@ class SessionManager:
 
         if not reply_text:
             reply_text = "".join(buffer)
+        if agent_died and not reply_text:
+            return AGENT_DIED_REPLY
         return reply_text
 
     def reset(self, key: str) -> None:

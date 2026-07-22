@@ -41,6 +41,9 @@ class SessionsConfig:
     max_sessions: int = 20
     working_dir: str = "./runtime"
     data_dir: str = "./data"
+    # Hard ceiling on one agent turn; a hung subprocess is stopped and the
+    # user gets an explicit error instead of a request that never returns.
+    turn_timeout_seconds: int = 300
 
 
 @dataclasses.dataclass

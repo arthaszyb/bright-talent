@@ -28,6 +28,7 @@ agent:
 
 sessions:
   idle_timeout_seconds: {{ bridge.get('sessions', {}).get('idle_timeout_seconds', 60) }}
+  turn_timeout_seconds: {{ bridge.get('sessions', {}).get('turn_timeout_seconds', 300) }}
   max_sessions: {{ bridge.get('sessions', {}).get('max_sessions', 20) }}
   working_dir: "./runtime"
   data_dir: "./log/bridge-data"

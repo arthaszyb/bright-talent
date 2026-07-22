@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 import uuid
 
 
@@ -50,6 +51,13 @@ def main() -> int:
 
         content = (obj.get("message") or {}).get("content", "")
         reply = f"echo: {content}"
+
+        # Failure-mode triggers for resilience tests:
+        if "crash-now" in content:
+            return 1  # die mid-turn, no result frame
+        if "hang-now" in content:
+            time.sleep(30)  # never emit a result within any sane turn timeout
+            continue
 
         if not sent_init:
             _emit({"type": "system", "subtype": "init", "session_id": session_id})
