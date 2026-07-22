@@ -70,6 +70,13 @@ scaffold versions (`scaffold/VERSION`).
   secret.
 
 ### Fixed
+- `de diff` no longer reports a session's hook state as drift: `runtime/work/`
+  (gitignored hook state, DESIGN.md S3) is created only after the agent runs
+  and was never in the build manifest, so `compute_diff` flagged every
+  `work/*` file as `extra` — a false-positive drift on the governance
+  centerpiece after any `de start`. That directory is now excluded from the
+  scan; `diff.py` gains unit tests (clean/modified/missing/extra + the
+  work-state regression).
 - Builder: nondeterministic `.build-manifest.json` / `.managed-files.json`
   entry ordering (unsorted skill-file iteration) — consecutive builds are
   now byte-identical.

@@ -11,6 +11,12 @@ from pathlib import Path
 from builder.build import sha256_file
 from builder.errors import BuildError
 
+# Top-level runtime/ directories that hold hook/agent runtime state, not
+# build output — they appear only after the agent runs and are never in the
+# build manifest (DESIGN.md S3: "work/ (gitignored hook state)"). Excluded
+# from drift so `de diff` doesn't false-positive on a session's leftovers.
+RUNTIME_STATE_DIRS = frozenset({"work"})
+
 
 def compute_diff(instance_dir: Path) -> dict:
     manifest_path = instance_dir / ".build-manifest.json"
@@ -25,6 +31,8 @@ def compute_diff(instance_dir: Path) -> dict:
         for f in sorted(runtime_dir.rglob("*")):
             if f.is_file():
                 rel = f.relative_to(runtime_dir).as_posix()
+                if rel.split("/", 1)[0] in RUNTIME_STATE_DIRS:
+                    continue
                 actual[rel] = sha256_file(f)
 
     missing = sorted(set(expected) - set(actual))
