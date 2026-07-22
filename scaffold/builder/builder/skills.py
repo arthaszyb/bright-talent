@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -43,13 +44,55 @@ def load_skills_yaml(instance_dir: Path) -> dict:
     return data
 
 
+def _frontmatter(text: str) -> dict:
+    """Parse the leading `---\\n...\\n---` YAML frontmatter block; {} if absent."""
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return {}
+    for i in range(1, len(lines)):
+        if lines[i].strip() == "---":
+            try:
+                data = yaml.safe_load("\n".join(lines[1:i]))
+            except yaml.YAMLError:
+                return {}
+            return data if isinstance(data, dict) else {}
+    return {}
+
+
+def _first_sentence(text: str) -> str:
+    """First sentence of `text` (up to the first '. '), else the whole string."""
+    m = re.match(r"\s*(.+?\.)(?:\s|$)", text, re.DOTALL)
+    return (m.group(1) if m else text).strip()
+
+
 def _skill_description(skill_dir: Path) -> str:
+    """The skill's one-line description for the CLAUDE.md skill index.
+
+    Prefers the SKILL.md frontmatter `description` field (first sentence, to
+    keep the index concise — the full routing text lives in SKILL.md itself);
+    falls back to the first non-heading body line, then to '<name> skill'.
+    """
     skill_md = skill_dir / "SKILL.md"
-    if skill_md.is_file():
-        for line in skill_md.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if line and not line.startswith("#") and not line.startswith("---"):
-                return line
+    if not skill_md.is_file():
+        return f"{skill_dir.name} skill"
+    text = skill_md.read_text(encoding="utf-8")
+
+    desc = _frontmatter(text).get("description")
+    if isinstance(desc, str) and desc.strip():
+        return _first_sentence(desc)
+
+    # Fallback: first non-heading line of the body (after any frontmatter).
+    body = text
+    lines = text.splitlines()
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                body = "\n".join(lines[i + 1 :])
+                break
+    for line in body.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            return line
     return f"{skill_dir.name} skill"
 
 
