@@ -58,7 +58,8 @@ load_dotenv() {
   local instance_root="$1"
   if [ -f "$instance_root/.env" ]; then
     set -a
-    # shellcheck disable=SC1090
+    # .env is a runtime-only file; never followed statically.
+    # shellcheck disable=SC1090,SC1091
     source "$instance_root/.env"
     set +a
   fi
