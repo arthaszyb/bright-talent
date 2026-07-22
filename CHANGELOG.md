@@ -70,6 +70,11 @@ scaffold versions (`scaffold/VERSION`).
   secret.
 
 ### Fixed
+- escalation-guard hook (security floor): emitted an invalid ISO-8601
+  timestamp (`...+00:00Z`) in every escalation event, and crashed with an
+  uncaught `AttributeError` when a tool's output was a structured object
+  (dict) instead of a string — silently disabling the circuit breaker for
+  those tools. Both fixed; the hook gains subprocess-driven tests.
 - `de diff` no longer reports a session's hook state as drift: `runtime/work/`
   (gitignored hook state, DESIGN.md S3) is created only after the agent runs
   and was never in the build manifest, so `compute_diff` flagged every

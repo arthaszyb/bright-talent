@@ -101,7 +101,9 @@ def create_escalation_event(category, summary, trigger_condition, evidence, risk
     rand_hex = os.urandom(3).hex()
     event_id = f"esc-{date_str}-{time_str}-{rand_hex}"
 
-    ts = now.isoformat() + 'Z' if not now.isoformat().endswith('Z') else now.isoformat()
+    # now is UTC-aware, so isoformat() ends with "+00:00"; normalize to a
+    # single trailing 'Z' (never both an offset AND 'Z').
+    ts = now.isoformat().replace('+00:00', 'Z')
 
     # Create event record
     event = {
@@ -181,6 +183,14 @@ if hook_event_name == 'PostToolUse':
         hook_input.get('stdout') or
         ""
     )
+
+    # tool_response is often a structured object; coerce so the failure-keyword
+    # scan (and .lower()) never crashes the circuit breaker on non-string output.
+    if not isinstance(output_text, str):
+        try:
+            output_text = json.dumps(output_text, default=str)
+        except (TypeError, ValueError):
+            output_text = str(output_text)
 
     is_error = hook_input.get('is_error', False)
 

@@ -7,7 +7,7 @@
     },
     {
       "path": ".claude/hooks/escalation-guard.py",
-      "sha256": "8b1c0a1329ffd21f830815b458fc104dfa982dedfbb6b582605104f8be490b48",
+      "sha256": "ff1fd5c8525d6640b560e5b359a0d67906daf925b3eb344f31e1284af124c71f",
       "source": "base"
     },
     {
