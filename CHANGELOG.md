@@ -9,6 +9,15 @@ scaffold versions (`scaffold/VERSION`).
 
 ## [Unreleased]
 
+### Security
+- Bridge `/mode` no longer lets a non-admin chat user loosen the agent's
+  permission mode: the builder's permission-monotonicity rule is now
+  enforced on the chat surface too — non-admins may only select a mode
+  equal to or stricter than the instance default, and loosening (e.g. to
+  `bypassPermissions`) requires admin. Direct unit tests added for
+  `auth.py` (allowlist/admin gating) and `commands.py` (dispatch + the
+  escalation gate).
+
 ### Added
 - Bridge inbound-text sanitization (`bridge/sanitize.py`): envelope tags,
   spoofed role markers, and control characters are neutralized before

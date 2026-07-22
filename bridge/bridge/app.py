@@ -87,7 +87,13 @@ async def handle_event(
         if token in commands.ADMIN_COMMANDS and not auth.is_admin(sender, config):
             reply_text = auth.REFUSAL_MESSAGE
         else:
-            reply_text = await commands.handle_command(text, key, sessions)
+            reply_text = await commands.handle_command(
+                text,
+                key,
+                sessions,
+                is_admin=auth.is_admin(sender, config),
+                base_mode=config.agent.permission_mode,
+            )
         await deliver_reply(channel_id, thread_id, reply_text, config)
         return
 
