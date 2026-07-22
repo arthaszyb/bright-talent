@@ -74,7 +74,17 @@ Six layers, one honest boundary each:
 ## Quickstart (5 minutes)
 
 Prereqs: [`uv`](https://docs.astral.sh/uv/), `git`, and an authenticated
-[`claude` CLI](https://claude.com/claude-code).
+[`claude` CLI](https://claude.com/claude-code) (only needed for the
+interactive DE session).
+
+The zero-thought path — build the instance and boot the mock Change Gateway
+(:8801) plus the governance console (:8900) in one command:
+
+```bash
+make demo
+```
+
+The full tour:
 
 ```bash
 # 1. Start the mock Change Gateway (keep it running)

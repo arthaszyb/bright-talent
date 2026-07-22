@@ -70,7 +70,16 @@ flowchart LR
 ## 五分钟上手
 
 前置：[`uv`](https://docs.astral.sh/uv/)、`git`，以及已认证的
-[`claude` CLI](https://claude.com/claude-code)。
+[`claude` CLI](https://claude.com/claude-code)（仅交互式 DE 会话需要）。
+
+零思考路径——一条命令完成实例构建并拉起 mock 变更网关（:8801）+
+治理控制台（:8900）：
+
+```bash
+make demo
+```
+
+完整路线：
 
 ```bash
 # 1. 启动 mock 变更网关（保持运行）

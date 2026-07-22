@@ -10,6 +10,11 @@ scaffold versions (`scaffold/VERSION`).
 ## [Unreleased]
 
 ### Added
+- Root `Makefile`: `make demo` boots the mock Change Gateway + governance
+  console in one command; `make test/lint/leak-check/build` mirror CI
+  verbatim.
+- Tests for the mock Change Gateway (the EXECUTION layer's only write
+  path), run in CI as `mocks-tests`.
 - Repo-root CI (`repo-ci`): ruff lint floor, fictional-universe leak check,
   builder merge-invariant tests, validate+build of the reference instance
   with a build-determinism double-build check, and the bridge / console /

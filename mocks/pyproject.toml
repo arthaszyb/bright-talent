@@ -9,6 +9,11 @@ description = "Mock services for de-demo: Change Gateway, service catalog"
 requires-python = ">=3.11"
 dependencies = []
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
 [tool.setuptools]
 package-dir = {"" = "."}
 packages = []
