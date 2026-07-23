@@ -19,6 +19,12 @@ scaffold versions (`scaffold/VERSION`).
   escalation gate).
 
 ### Added
+- `docs/authoring-a-worker.md`: an author-facing guide for standing up an
+  intelligent-staff worker for your own team — from one copied instance
+  directory to a validated, doctored, drift-checked runtime. Grounded in the
+  exact `de validate/build/doctor/diff` output of a freshly scaffolded worker
+  and linked from both READMEs. Complements the demo-focused quickstart by
+  documenting the platform's actual adoption path.
 - Deterministic CI coverage for the ticket-review skill's core SOP
   decision logic (`analyze.py` R1/R2/R3 + `render_comment.py`): run as
   subprocesses against crafted fixtures in `eval/tests/`, so the digital

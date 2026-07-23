@@ -124,6 +124,10 @@ cd instances/acme-checkout-sre && ../../scaffold/de serve .
 # then: uv run python ../../mocks/chat_client.py --message "hello" --secret changeme-demo-secret
 ```
 
+Ready to stand up a worker for **your own** team? See
+[docs/authoring-a-worker.md](docs/authoring-a-worker.md) — the same flow, from
+one copied directory to a governed, drift-checked runtime.
+
 ## Governance console
 
 Fleet health scoring, drift detection, and a draft-based config-change

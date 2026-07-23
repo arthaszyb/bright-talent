@@ -118,6 +118,10 @@ cd instances/acme-checkout-sre && ../../scaffold/de serve .
 # 然后：uv run python ../../mocks/chat_client.py --message "hello" --secret changeme-demo-secret
 ```
 
+想为**自己团队**搭建一个智能员工？见
+[docs/authoring-a-worker.md](docs/authoring-a-worker.md)——同样的流程，从复制一个
+目录到一个受治理、可校验无漂移的运行时。
+
 ## 治理控制台
 
 舰队健康评分、漂移检测、基于草稿的配置变更工作流（校验 → 构建测试 → mock
