@@ -19,6 +19,11 @@ scaffold versions (`scaffold/VERSION`).
   escalation gate).
 
 ### Added
+- Deterministic CI coverage for the ticket-review skill's core SOP
+  decision logic (`analyze.py` R1/R2/R3 + `render_comment.py`): run as
+  subprocesses against crafted fixtures in `eval/tests/`, so the digital
+  employee's actual PASS/FAIL reasoning is guarded even when the LLM-driven
+  gates are skipped (no `ANTHROPIC_API_KEY`).
 - `docs/example-review.md`: real, unedited `ticket-review` output for
   the two seeded tickets (PASS + the SOP-violating FAIL), with a one-command
   reproduction — concrete proof of what the digital employee produces,
