@@ -67,6 +67,21 @@ flowchart LR
 | `console/` | PLATFORM | 治理控制台：舰队健康分、漂移检测、基于草稿的配置变更 → mock MR |
 | `mocks/` | EXECUTION | mock 变更网关（端口 **8801**）与聊天客户端（bridge 端口 **9100**） |
 
+## 一次评审长什么样
+
+`ticket-review` 技能只产出评论式的 SOP 结论并交给人类决定——从不批准或拒绝。
+下面是工单 1002(一次违反两条 SOP 的缩容)的**真实、未编辑**产出;两个种子工单
+的完整示例与一键复现命令见
+[`docs/example-review.md`](docs/example-review.md)：
+
+| 规则 | 结论 | 证据 |
+|---|---|---|
+| predicted_peak_memory_utilization_below_80pct | PASS | 变更后预测峰值=35.0%（阈值 < 80%） |
+| minimum_replica_count | **FAIL** | 目标副本=1（最小要求=2） |
+| campaign_cooldown_for_scale_down | **FAIL** | 活动 'mid-year-flash-sale' 结束 2 天后即请求缩容（冷却期=7 天） |
+
+> _未做任何批准/拒绝动作。请将此评论路由到工单交由人类决定。_
+
 ## 五分钟上手
 
 前置：[`uv`](https://docs.astral.sh/uv/)、`git`，以及已认证的

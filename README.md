@@ -71,6 +71,22 @@ Six layers, one honest boundary each:
 | `console/` | PLATFORM | Governance console: fleet health scores, drift detection, draft-based config changes → mock MRs |
 | `mocks/` | EXECUTION | Mock Change Gateway (port **8801**) and chat client (bridge on **9100**) |
 
+## What a review actually looks like
+
+The `ticket-review` skill produces a comment-only SOP verdict and routes it to
+a human — it never approves or rejects. Here is the **real, unedited** output
+for ticket 1002 (a scale-down that breaks two SOP rules); the full example for
+both seeded tickets, with a one-command reproduction, is in
+[`docs/example-review.md`](docs/example-review.md):
+
+| Rule | Status | Evidence |
+|---|---|---|
+| predicted_peak_memory_utilization_below_80pct | PASS | predicted post-change peak=35.0% (threshold < 80%) |
+| minimum_replica_count | **FAIL** | target replicas=1 (minimum required=2) |
+| campaign_cooldown_for_scale_down | **FAIL** | scale-down requested 2 day(s) after campaign 'mid-year-flash-sale' ended (cooldown=7 days) |
+
+> _No approve/reject action was taken. Route this comment to the ticket for human decision._
+
 ## Quickstart (5 minutes)
 
 Prereqs: [`uv`](https://docs.astral.sh/uv/), `git`, and an authenticated

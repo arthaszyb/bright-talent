@@ -19,6 +19,10 @@ scaffold versions (`scaffold/VERSION`).
   escalation gate).
 
 ### Added
+- `docs/example-review.md`: real, unedited `ticket-review` output for
+  the two seeded tickets (PASS + the SOP-violating FAIL), with a one-command
+  reproduction — concrete proof of what the digital employee produces,
+  linked from both READMEs. No LLM needed; the skill scripts are deterministic.
 - Bridge inbound-text sanitization (`bridge/sanitize.py`): envelope tags,
   spoofed role markers, and control characters are neutralized before
   session injection — governance checklist item 4 moves from
