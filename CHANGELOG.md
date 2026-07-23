@@ -79,6 +79,14 @@ scaffold versions (`scaffold/VERSION`).
   secret.
 
 ### Fixed
+- context-isolator hook (security floor): a prompt containing a ```` ```log ````
+  fenced block or an unlabeled fenced code block produced corrupted
+  `<untrusted_data>` markup — the loose "log"/"code" context cues (sections
+  5/6) re-matched the `data_source="log"`/`"code"` attribute that section 1
+  had already inserted and split the tag (`data_source="<untrusted_data …`).
+  A corrupted isolation tag can defeat the "treat as external data" guard.
+  Those sections now skip any span that already contains inserted tags;
+  regression tests added.
 - escalation-guard hook (security floor): emitted an invalid ISO-8601
   timestamp (`...+00:00Z`) in every escalation event, and crashed with an
   uncaught `AttributeError` when a tool's output was a structured object

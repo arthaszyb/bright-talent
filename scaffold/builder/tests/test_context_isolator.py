@@ -66,3 +66,25 @@ def test_large_json_literal_is_wrapped():
     proc = run_prompt('here is data {"cluster": "acme.checkout", "replicas": 3, "nodes": 9}')
     ctx = context_of(proc)
     assert ctx is not None and "<untrusted_data" in ctx
+
+
+def _no_mangled_tags(ctx):
+    # A split tag looks like: data_source="<untrusted_data data_source="...
+    return ctx is not None and 'data_source="<untrusted' not in ctx
+
+
+def test_fenced_log_block_does_not_mangle_tags():
+    # ```log → section 1 inserts data_source="log"; section 5's loose "log"
+    # cue must not re-match inside that tag and split it.
+    proc = run_prompt("here:\n```log\n2026-01-01 00:00:00 | ERROR | boom\nmore\n```\nend")
+    assert _no_mangled_tags(context_of(proc))
+
+
+def test_unlabeled_fenced_code_does_not_mangle_tags():
+    # unlabeled fence → data_source="code"; section 6's "code" cue must not
+    # re-match inside that tag.
+    proc = run_prompt(
+        "look:\n```\ndef f():\n    return 1\n```\n"
+        "review this code: def g(): return 2 and more here yes indeed"
+    )
+    assert _no_mangled_tags(context_of(proc))

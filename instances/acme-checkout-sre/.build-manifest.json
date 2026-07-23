@@ -2,7 +2,7 @@
   "files": [
     {
       "path": ".claude/hooks/context-isolator.py",
-      "sha256": "2eb1663dc020047c9dbda98dc2905e184c4ff4276b86869f9aea8e37397ecf5d",
+      "sha256": "d717e63affcfded4b82042d3821193c472f642f5afe872a0b0b777cb173c3c96",
       "source": "base"
     },
     {

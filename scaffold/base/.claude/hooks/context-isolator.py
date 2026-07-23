@@ -81,6 +81,10 @@ wrapped_prompt = re.sub(json_pattern, wrap_json, wrapped_prompt)
 summarize_pattern = r'(?:summarize|translate|analyze|review)\s+(?:this|the|following)?\s*(?:passage|text|content|code|snippet|error|log):?\s*(.+?)(?=\n\n|$)'
 def wrap_summarize(match):
     global changed
+    if '<untrusted_data' in match.group(0) or '</untrusted_data>' in match.group(0):
+        # Already-wrapped span (an earlier section's inserted tags); never
+        # re-wrap it — doing so splits the tag and corrupts the markup.
+        return match.group(0)
     passage = match.group(1)
     if len(passage) >= 40:
         changed = True
@@ -94,6 +98,8 @@ log_cue_pattern = r'(?:following\s+)?(?:logs?|log\s+output):?\s*(.+?)$'
 if re.search(log_cue_pattern, wrapped_prompt, re.IGNORECASE | re.DOTALL):
     def wrap_log_cue(match):
         global changed
+        if '<untrusted_data' in match.group(0) or '</untrusted_data>' in match.group(0):
+            return match.group(0)  # don't re-wrap an already-tagged span
         content = match.group(1)
         if content.strip() and '\n' in content:
             changed = True
@@ -106,6 +112,8 @@ code_cue_pattern = r'(?:following\s+)?(?:code|snippet|this\s+code):?\s*(.+?)$'
 if re.search(code_cue_pattern, wrapped_prompt, re.IGNORECASE | re.DOTALL):
     def wrap_code_cue(match):
         global changed
+        if '<untrusted_data' in match.group(0) or '</untrusted_data>' in match.group(0):
+            return match.group(0)  # don't re-wrap an already-tagged span
         content = match.group(1)
         if content.strip() and any(kw in content.lower() for kw in ['def ', 'class ', 'import ', 'function', 'return']):
             changed = True
