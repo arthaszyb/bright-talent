@@ -48,6 +48,32 @@ def enforce_signing_secret_policy(config: BridgeConfig) -> None:
     )
 
 
+def enforce_allowlist_policy(config: BridgeConfig) -> None:
+    """Warn loudly when no user allowlist is configured.
+
+    `auth.is_allowed` fail-opens on an empty `allowed_users`: with a valid
+    signature, *any* sender may then drive the agent. That is a fine demo
+    default on loopback, but off-box it is an easy footgun (an open bridge),
+    so surface it — escalated when the bind is non-loopback. We warn rather
+    than fail because a properly-set signing secret already limits delivery
+    to the real chat platform, so an open user list can be a deliberate
+    choice; the operator should just make it knowingly."""
+    if config.auth.allowed_users:
+        return
+    if config.server.host not in _LOOPBACK_HOSTS:
+        logger.warning(
+            "bridge: bound to %r with an EMPTY user allowlist — any "
+            "signature-valid sender can drive the agent. Set auth.allowed_users "
+            "to restrict who may use the bridge before exposing it beyond loopback.",
+            config.server.host,
+        )
+        return
+    logger.warning(
+        "bridge: no user allowlist configured (auth.allowed_users is empty); "
+        "every signature-valid sender is accepted (loopback only)"
+    )
+
+
 async def deliver_reply(channel_id, thread_id, text: str, config: BridgeConfig) -> None:
     """Always log the reply; best-effort POST it to chat.api_base_url."""
     logger.info("[reply] channel=%s thread=%s text=%s", channel_id, thread_id, text)
@@ -180,6 +206,7 @@ def main() -> None:
 
     config = load_config(args.config)
     enforce_signing_secret_policy(config)
+    enforce_allowlist_policy(config)
     app = create_app(config)
 
     import uvicorn

@@ -10,6 +10,15 @@ scaffold versions (`scaffold/VERSION`).
 ## [Unreleased]
 
 ### Security
+- Bridge now warns at startup when no user allowlist is configured
+  (`enforce_allowlist_policy`). `auth.is_allowed` fail-opens on an empty
+  `allowed_users`, so any signature-valid sender can drive the agent — fine
+  as a loopback demo default, but an easy footgun (an open bridge) once the
+  bind is off-box. The check logs a plain warning on loopback and an
+  escalated one naming the host on a non-loopback bind, mirroring the
+  existing signing-secret policy; it warns rather than fails because a real
+  signing secret already gates delivery, so an open user list can be a
+  deliberate choice. Unit tests in `bridge/tests/test_allowlist_policy.py`.
 - Governance console draft path-traversal write fixed: the CONFIG_EDIT
   allowlist's `kb/team/` prefix rule admitted paths like
   `kb/team/../../../etc/x`, which survived the check and only resolved when
