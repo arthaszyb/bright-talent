@@ -31,6 +31,18 @@ tool_output = (
 if not tool_output:
     sys.exit(0)
 
+# PostToolUse tool output is frequently structured (a dict/list — e.g. a
+# command result or a parsed API response), not a bare string. re.search on a
+# non-string raises TypeError, which would crash the hook and silently defeat
+# credential scanning for exactly the outputs most likely to embed secrets.
+# Coerce to text (JSON-serialize structured values) so nested credential
+# values are still scanned.
+if not isinstance(tool_output, str):
+    try:
+        tool_output = json.dumps(tool_output, ensure_ascii=False, default=str)
+    except (TypeError, ValueError):
+        tool_output = str(tool_output)
+
 # Credential patterns (split to avoid literal pattern matches in source)
 patterns = [
     r'sk-ant-' + r'[A-Za-z0-9_-]{20,}',

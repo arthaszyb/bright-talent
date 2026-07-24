@@ -3,139 +3,139 @@
     {
       "path": ".claude/hooks/context-isolator.py",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "d717e63affcfded4b82042d3821193c472f642f5afe872a0b0b777cb173c3c96"
     },
     {
       "path": ".claude/hooks/escalation-guard.py",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "ff1fd5c8525d6640b560e5b359a0d67906daf925b3eb344f31e1284af124c71f"
     },
     {
       "path": ".claude/hooks/injection-detector.sh",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "0609e2570c654d2f355d6d9a09b589a92d3f9a489afc7a50333a1091b51c44ba"
     },
     {
       "path": ".claude/hooks/input-sanitizer.sh",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "d75e1c729fb0097a0d19a0932c41b43d628dedbf061e19f38b199d4c77c3f38a"
     },
     {
       "path": ".claude/hooks/result-sanitizer.sh",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
-      "template_sha256": "4316876678b576aadc0973af369202b5a97ac15fea30a83bc95a622c59a66bec"
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
+      "template_sha256": "81bbf66bf98b475f0f8090a9d2007526290a2eca0558f7c76045a693e38059a0"
     },
     {
       "path": ".claude/hooks/skill-gate.py",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "1e6ba2d26752f941cb3ccdc0aa4d838171dae257dbb408c68f7afc7b28989af9"
     },
     {
       "path": ".claude/policy/change-freeze.yaml",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "f3a0e856619ba4515bf7245ec0be652fcd14b20a2a293d79f77527751135366d"
     },
     {
       "path": ".claude/policy/operation-levels.yaml",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "7623391ce80a503661d59baa4cf8418511475145fe21c86a50f90391818013ea"
     },
     {
       "path": ".claude/policy/security.yaml",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "4b286c5943dcaf57128d7e90b9c34d03847e058d7c80c4670aa6449e27908d29"
     },
     {
       "path": ".claude/policy/sensitive-data.yaml",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "b37ff4b032ede0d27a2520438a9d1ba8c7c9d43c7df66321c175fcb64823866e"
     },
     {
       "path": ".claude/tools/de-agent-escalate.py",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "f261186691c217241eb6f88f46dac28e235e64434602757a560ba86da0407949"
     },
     {
       "path": ".claude/tools/de_agent_escalate_lib.py",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "2e5cf56a0006fe636d4bba298b4d25243a9179a3afb93f695d1e04249eeccf99"
     },
     {
       "path": "kb/change-management-principles.md",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "91c6ff7b3b79ce52a738bb0e8bd0f8bed419da499f806a9cbd24948c043e961a"
     },
     {
       "path": "kb/incident-response-basics.md",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "6fb865e8680f2bfdebbca70590cc30dac17ff178c819b9b4b4232c104f8d04a4"
     },
     {
       "path": "kb/kb-usage.md",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "082e72783674cb0b99817650401211aad14a2d12a069372d5f9fcc5b39059df4"
     },
     {
       "path": "CLAUDE.md",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "0a3370263fbe004b92c3fa4609a18fe5424c023e9fa8f27e044abd12d5e99962"
     },
     {
       "path": ".claude/settings.json",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "b0821c57419d31e8e31f3d956e894de0910725363d1a2113609632d4d0db46ee"
     },
     {
       "path": ".mcp.json",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "0e077cc095017b104c8d99d23650cdce93e5fa52cab637d2418da2687b3db130"
     },
     {
       "path": "tests/common-cross-scope-access-denied.mock.yaml",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "fa17e5ffc13c002506a24e68ea5ab55236e20b1b2f22c9c38328dfcf9bfd5341"
     },
     {
       "path": "tests/common-dangerous-operation-denied.mock.yaml",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "1d6849b56d9b2423504747db0571ae19fed9f2cb34d92eb933135a6a829adef8"
     },
     {
       "path": "tests/common-file-read-denied.mock.yaml",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "855f75afcb93661eb14029c893cca1818c514a7a004c340261dd1f6ca908d33b"
     },
     {
       "path": "tests/common-prompt-injection-denied.mock.yaml",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "7b80af5f10ddc28f34025a60eaf1ed9aea3983665ede7208e4d6e1a5e599ec20"
     },
     {
       "path": "tests/common-secret-debug-redaction.mock.yaml",
       "scaffold_version": "0.1.0",
-      "synced_at": "2026-07-23T03:12:53.146570+00:00",
+      "synced_at": "2026-07-24T05:09:32.216370+00:00",
       "template_sha256": "5435441f37a436563d3006abdf724afad208330847e76d5c6999ff5368b82858"
     }
   ]

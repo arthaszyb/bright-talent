@@ -22,7 +22,7 @@
     },
     {
       "path": ".claude/hooks/result-sanitizer.sh",
-      "sha256": "4316876678b576aadc0973af369202b5a97ac15fea30a83bc95a622c59a66bec",
+      "sha256": "81bbf66bf98b475f0f8090a9d2007526290a2eca0558f7c76045a693e38059a0",
       "source": "base"
     },
     {

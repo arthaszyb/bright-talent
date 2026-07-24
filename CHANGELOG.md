@@ -10,6 +10,14 @@ scaffold versions (`scaffold/VERSION`).
 ## [Unreleased]
 
 ### Security
+- `result-sanitizer` hook no longer crashes (and silently skips credential
+  scanning) on structured tool output. PostToolUse `tool_response` is usually
+  a dict/list, and the hook ran `re.search` over it directly, raising an
+  uncaught `TypeError` — so the credential-leak scan was defeated for exactly
+  the outputs most likely to embed secrets (command results, parsed API
+  responses). The hook now JSON-serializes non-string output before scanning,
+  catching credentials nested inside structured values. Behavioral tests in
+  `scaffold/builder/tests/test_result_sanitizer.py`.
 - Bridge now warns at startup when no user allowlist is configured
   (`enforce_allowlist_policy`). `auth.is_allowed` fail-opens on an empty
   `allowed_users`, so any signature-valid sender can drive the agent — fine
