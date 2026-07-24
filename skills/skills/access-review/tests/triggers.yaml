@@ -1,0 +1,42 @@
+# Routing tests for access-review.
+
+should_trigger:
+  - prompt: >-
+      Please review this access request against the least-privilege policy:
+      {"request_id": "AR-2043", "requestor": "jordan@acme.example",
+      "service": "acme.storefront.checkout", "role": "admin",
+      "environment": "production", "justification_ticket": "OPS-1187",
+      "duration_days": 30, "manager_approved": true}
+    evaluation:
+      case_id: access-review.typical_scenario.access_request_json_review.a1b2c3d4
+      type: typical_scenario
+      label: access_request_json_review
+  - prompt: "review access request AR-2043 against the access policy"
+    evaluation:
+      case_id: access-review.typical_scenario.request_id_review.b2c3d4e5
+      type: typical_scenario
+      label: request_id_review
+  - prompt: "run a least-privilege check on access request AR-2044 before I sign off"
+    evaluation:
+      case_id: access-review.typical_scenario.least_privilege_phrasing.c3d4e5f6
+      type: typical_scenario
+      label: least_privilege_phrasing
+
+should_not_trigger:
+  - prompt: "grant me admin on acme.storefront.checkout"
+    evaluation:
+      case_id: access-review.typical_scenario.grant_request_not_review.d4e5f6a7
+      type: typical_scenario
+      label: grant_request_not_review
+  - prompt: "what's the status of access request AR-2043"
+    evaluation:
+      case_id: access-review.typical_scenario.status_query_not_review.e5f6a7b8
+      type: typical_scenario
+      label: status_query_not_review
+  - prompt: "what does the access policy say about production grants?"
+    evaluation:
+      case_id: access-review.typical_scenario.policy_lookup_not_review.f6a7b8c9
+      type: typical_scenario
+      label: policy_lookup_not_review
+
+pass_threshold: 0.9

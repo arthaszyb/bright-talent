@@ -155,17 +155,33 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.detect-release.outputs.skills != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Releasing (pushing a tag that can re-trigger CI) needs a PAT. When it
+    # isn't configured, don't fail the push — skip tagging and say so, exactly
+    # as the triggers/safety/e2e gates skip without ANTHROPIC_API_KEY. A repo
+    # without RELEASE_BOT_TOKEN still validates every deterministic gate; it
+    # just tags releases manually.
+    env:
+      RELEASE_BOT_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
     strategy:
       matrix:
         skill: ${{ fromJSON(needs.detect-release.outputs.skills) }}
     steps:
+      - name: note missing release token
+        if: env.RELEASE_BOT_TOKEN == ''
+        run: |
+          echo "RELEASE_BOT_TOKEN is not configured — skipping auto-tag for ${{ matrix.skill }}." >&2
+          echo "The deterministic gates (detect-release, lint, version-check) have already passed;" >&2
+          echo "tag the release manually with: git tag -a <skill>/v<version> && git push origin <tag>" >&2
       - uses: actions/checkout@v4
+        if: env.RELEASE_BOT_TOKEN != ''
         with:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_BOT_TOKEN }}
       - uses: astral-sh/setup-uv@v3
+        if: env.RELEASE_BOT_TOKEN != ''
       - name: resolve released version
         id: ver
+        if: env.RELEASE_BOT_TOKEN != ''
         run: |
           uv run --project skills/ci python skills/ci/version_check.py skills/skills/${{ matrix.skill }}
           version=$(python3 -c "
@@ -176,6 +192,7 @@ jobs:
           ")
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: create version tag + move latest
+        if: env.RELEASE_BOT_TOKEN != ''
         run: |
           tag="${{ matrix.skill }}/v${{ steps.ver.outputs.version }}"
           if git rev-parse "$tag" >/dev/null 2>&1; then

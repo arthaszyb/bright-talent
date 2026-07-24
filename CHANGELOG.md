@@ -46,6 +46,19 @@ scaffold versions (`scaffold/VERSION`).
   escalation gate).
 
 ### Added
+- `access-review`, a **second reference skill** — a security/compliance
+  worker that reviews a service access-grant request against a least-privilege
+  policy (role catalog, production time-boxing, privileged-PII manager
+  approval) and posts a comment-only review, never granting or revoking. It
+  runs on the same scaffold, security floor, and eval harness as the SRE
+  `ticket-review` worker, demonstrating the platform carries a different
+  worker archetype unchanged. Deterministic policy logic is gated by
+  `eval/tests/test_access_review_logic.py` (13 tests), and the skill passes
+  the standing lint + version-check release gates.
+- skills-ci `auto-tag` now skips gracefully when `RELEASE_BOT_TOKEN` is not
+  configured (mirroring the `ANTHROPIC_API_KEY`-gated jobs) instead of failing
+  the push: a repo without the release PAT still validates every deterministic
+  gate and can tag releases manually.
 - `docs/authoring-a-worker.md`: an author-facing guide for standing up an
   intelligent-staff worker for your own team — from one copied instance
   directory to a validated, doctored, drift-checked runtime. Grounded in the

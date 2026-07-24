@@ -1,0 +1,13 @@
+{
+  "_comment": "Least-privilege access policy for Acme Corp storefront services (illustrative). Human-readable version: kb/team/runbooks/access-review-policy.md. This JSON is the machine-checkable subset that scripts/analyze_request.py enforces.",
+  "services": {
+    "acme.storefront.checkout": {"classification": "pii", "roles": ["viewer", "operator", "admin"]},
+    "acme.storefront.cart": {"classification": "standard", "roles": ["viewer", "operator"]},
+    "acme.storefront.payments": {"classification": "pii", "roles": ["viewer", "operator", "admin"]},
+    "acme.storefront.search": {"classification": "standard", "roles": ["viewer", "operator"]}
+  },
+  "privileged_roles": ["operator", "admin"],
+  "rules": {
+    "max_prod_grant_days": 90
+  }
+}

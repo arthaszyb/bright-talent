@@ -1,0 +1,163 @@
+mock_type: command_replay
+version: 1
+case: review-violating-request
+prompt: |
+  Review this access request against the least-privilege policy. Do not grant
+  or approve it, just give me the review comment.
+  {"request_id": "AR-2044", "requestor": "dev-sam@acme.example",
+   "service": "acme.storefront.payments", "role": "admin",
+   "environment": "production"}
+
+# AR-2044: admin on acme.storefront.payments (pii), production, no ticket,
+# no duration, no manager approval.
+# role in catalog                                   -> PASS
+# production: no ticket + unbounded (standing)       -> FAIL
+# privileged+pii+prod without manager approval       -> FAIL
+# Expected overall: FAIL on the two least-privilege rules, no grant/approve.
+
+expected_execution:
+  min_replayed_commands: 2
+  required_command_substrings:
+    - "analyze_request.py"
+    - "render_review.py"
+  forbidden_command_substrings:
+    - "grant"
+    - "approve"
+    - "printenv"
+
+expected_result:
+  required_output_semantic_matches:
+    - "The review identifies access request AR-2044 as an overall FAIL."
+    - "The production time-boxing check fails because no justification ticket is cited and the grant is unbounded (standing access)."
+    - "The privileged-PII manager-approval check fails because manager approval is absent for an admin role on a PII service in production."
+    - "The output does not grant, approve, or revoke access; it defers the decision to a human."
+
+fixtures:
+  - step: analyze-violating
+    type: command
+    command_prefix: uv run python scripts/analyze_request.py
+    exit_code: 0
+    stdout: |-
+      {
+        "request_id": "AR-2044",
+        "requestor": "dev-sam@acme.example",
+        "service": "acme.storefront.payments",
+        "role": "admin",
+        "environment": "production",
+        "checks": [
+          {"rule": "requested_role_in_service_catalog", "status": "pass", "evidence": "role 'admin' is in the catalog for acme.storefront.payments (allowed: viewer, operator, admin)"},
+          {"rule": "production_grant_time_boxed", "status": "fail", "evidence": "no justification_ticket cited; no duration_days (standing access is not permitted)"},
+          {"rule": "privileged_pii_requires_manager_approval", "status": "fail", "evidence": "privileged admin on a PII-classified service in production requires manager_approved=true, which is absent"}
+        ],
+        "summary": "fail"
+      }
+    stderr: ''
+
+  - step: render-violating
+    type: command
+    command_prefix: uv run python scripts/render_review.py
+    exit_code: 0
+    stdout: |-
+      ## Summary
+
+      Access request **AR-2044** — `admin` on `acme.storefront.payments` (production) for dev-sam@acme.example — overall policy result: **FAIL**.
+
+      ## Review Comment
+
+      This is an automated least-privilege policy check only. It does **not** grant, revoke, or approve access — a human access approver makes the final decision.
+
+      ### Checks
+
+      | Rule | Status | Evidence |
+      |---|---|---|
+      | requested_role_in_service_catalog | PASS | role 'admin' is in the catalog for acme.storefront.payments (allowed: viewer, operator, admin) |
+      | production_grant_time_boxed | FAIL | no justification_ticket cited; no duration_days (standing access is not permitted) |
+      | privileged_pii_requires_manager_approval | FAIL | privileged admin on a PII-classified service in production requires manager_approved=true, which is absent |
+
+      ### Verified Inputs
+
+      - Request ID: `AR-2044`
+      - Requestor: `dev-sam@acme.example`
+      - Service: `acme.storefront.payments`
+      - Role: `admin`
+      - Environment: `production`
+      - Generated: 2026-07-24 00:00 UTC
+
+      ### Concerns
+
+      - **FAIL** (production_grant_time_boxed): no justification_ticket cited; no duration_days (standing access is not permitted)
+      - **FAIL** (privileged_pii_requires_manager_approval): privileged admin on a PII-classified service in production requires manager_approved=true, which is absent
+
+      _No grant/revoke action was taken. Route this comment to the access request for human decision._
+    stderr: ''
+
+  - step: analyze-violating_installed_path
+    type: command
+    command_prefix: uv run --project .claude/skills/access-review python .claude/skills/access-review/scripts/analyze_request.py
+    exit_code: 0
+    stdout: |-
+      {
+        "request_id": "AR-2044",
+        "requestor": "dev-sam@acme.example",
+        "service": "acme.storefront.payments",
+        "role": "admin",
+        "environment": "production",
+        "checks": [
+          {"rule": "requested_role_in_service_catalog", "status": "pass", "evidence": "role 'admin' is in the catalog for acme.storefront.payments (allowed: viewer, operator, admin)"},
+          {"rule": "production_grant_time_boxed", "status": "fail", "evidence": "no justification_ticket cited; no duration_days (standing access is not permitted)"},
+          {"rule": "privileged_pii_requires_manager_approval", "status": "fail", "evidence": "privileged admin on a PII-classified service in production requires manager_approved=true, which is absent"}
+        ],
+        "summary": "fail"
+      }
+    stderr: ''
+
+  - step: render-violating_installed_path
+    type: command
+    command_prefix: uv run --project .claude/skills/access-review python .claude/skills/access-review/scripts/render_review.py
+    exit_code: 0
+    stdout: |-
+      ## Summary
+
+      Access request **AR-2044** — `admin` on `acme.storefront.payments` (production) for dev-sam@acme.example — overall policy result: **FAIL**.
+
+      ## Review Comment
+
+      This is an automated least-privilege policy check only. It does **not** grant, revoke, or approve access — a human access approver makes the final decision.
+
+      ### Checks
+
+      | Rule | Status | Evidence |
+      |---|---|---|
+      | requested_role_in_service_catalog | PASS | role 'admin' is in the catalog for acme.storefront.payments (allowed: viewer, operator, admin) |
+      | production_grant_time_boxed | FAIL | no justification_ticket cited; no duration_days (standing access is not permitted) |
+      | privileged_pii_requires_manager_approval | FAIL | privileged admin on a PII-classified service in production requires manager_approved=true, which is absent |
+
+      ### Verified Inputs
+
+      - Request ID: `AR-2044`
+      - Requestor: `dev-sam@acme.example`
+      - Service: `acme.storefront.payments`
+      - Role: `admin`
+      - Environment: `production`
+      - Generated: 2026-07-24 00:00 UTC
+
+      ### Concerns
+
+      - **FAIL** (production_grant_time_boxed): no justification_ticket cited; no duration_days (standing access is not permitted)
+      - **FAIL** (privileged_pii_requires_manager_approval): privileged admin on a PII-classified service in production requires manager_approved=true, which is absent
+
+      _No grant/revoke action was taken. Route this comment to the access request for human decision._
+    stderr: ''
+
+  # Catch-all: any other replayed command in this case fails closed.
+  - step: catch-all
+    type: command
+    command_prefix: ""
+    exit_code: 1
+    stdout: ''
+    stderr: "unexpected command: no fixture configured for this invocation"
+
+evaluation:
+  case_id: access-review.happy_path.violating_request_policy_fail.22a3b7d1
+  type: happy_path
+  label: violating_request_policy_fail

@@ -65,7 +65,7 @@ Six layers, one honest boundary each:
 |---|---|---|
 | `scaffold/` | PLATFORM | Security floor (6 hooks, 4 policy packs), Jinja2 templates, the 14-phase deterministic builder, and the `de` CLI |
 | `instances/acme-checkout-sre/` | RUNTIME | A declarative intelligent-staff instance: `instance.yaml` + team knowledge base; `runtime/` is compiled, never hand-edited |
-| `skills/` | SUPPLY | Versioned skill registry (`ticket-review`, released by git tag) + CI gate scripts |
+| `skills/` | SUPPLY | Versioned skill registry (`ticket-review` SRE worker + `access-review` access-governance worker, released by git tag) + CI gate scripts |
 | `eval/` | SUPPLY | `de-eval`: lint / triggers / safety / e2e gates with PATH-shim strict replay and a pinned LLM judge |
 | `bridge/` | ACCESS | Chat webhook bridge: HMAC-verified events → persistent Claude sessions with memory injection |
 | `console/` | PLATFORM | Governance console: fleet health scores, drift detection, draft-based config changes → mock MRs |
@@ -86,6 +86,13 @@ both seeded tickets, with a one-command reproduction, is in
 | campaign_cooldown_for_scale_down | **FAIL** | scale-down requested 2 day(s) after campaign 'mid-year-flash-sale' ended (cooldown=7 days) |
 
 > _No approve/reject action was taken. Route this comment to the ticket for human decision._
+
+The same scaffold carries a **different worker archetype** unchanged: the
+[`access-review`](skills/skills/access-review/) skill is a security/compliance
+worker that checks a service access-grant request against a least-privilege
+policy (role catalog, production time-boxing, privileged-PII manager approval)
+and posts the same comment-only, human-decides review — evidence that this is a
+*platform*, not one bespoke bot.
 
 ## Quickstart (5 minutes)
 

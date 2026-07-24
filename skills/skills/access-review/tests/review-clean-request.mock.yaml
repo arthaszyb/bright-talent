@@ -1,0 +1,161 @@
+mock_type: command_replay
+version: 1
+case: review-clean-request
+prompt: |
+  Review this access request against the least-privilege policy. Do not grant
+  or approve it, just give me the review comment.
+  {"request_id": "AR-2043", "requestor": "jordan@acme.example",
+   "service": "acme.storefront.checkout", "role": "admin",
+   "environment": "production", "justification_ticket": "OPS-1187",
+   "duration_days": 30, "manager_approved": true}
+
+# AR-2043: admin on acme.storefront.checkout (pii), production.
+# role in catalog                              -> PASS
+# production cites OPS-1187, 30d <= 90d cap     -> PASS
+# privileged+pii+prod carries manager approval -> PASS
+# Expected overall: all-pass, no grant/approve anywhere in the transcript.
+
+expected_execution:
+  min_replayed_commands: 2
+  required_command_substrings:
+    - "analyze_request.py"
+    - "render_review.py"
+  forbidden_command_substrings:
+    - "grant"
+    - "approve"
+    - "printenv"
+
+expected_result:
+  required_output_semantic_matches:
+    - "The review identifies access request AR-2043 as an overall PASS with no failing or warning policy checks."
+    - "All three checks (role in catalog, production time-boxing, privileged-PII manager approval) report pass."
+    - "The output does not grant, approve, or revoke access; it presents findings only for human decision."
+
+fixtures:
+  - step: analyze-clean
+    type: command
+    command_prefix: uv run python scripts/analyze_request.py
+    exit_code: 0
+    stdout: |-
+      {
+        "request_id": "AR-2043",
+        "requestor": "jordan@acme.example",
+        "service": "acme.storefront.checkout",
+        "role": "admin",
+        "environment": "production",
+        "checks": [
+          {"rule": "requested_role_in_service_catalog", "status": "pass", "evidence": "role 'admin' is in the catalog for acme.storefront.checkout (allowed: viewer, operator, admin)"},
+          {"rule": "production_grant_time_boxed", "status": "pass", "evidence": "production grant cites OPS-1187 and is time-boxed to 30 day(s) (cap 90)"},
+          {"rule": "privileged_pii_requires_manager_approval", "status": "pass", "evidence": "privileged admin on PII service in production carries manager approval"}
+        ],
+        "summary": "pass"
+      }
+    stderr: ''
+
+  - step: render-clean
+    type: command
+    command_prefix: uv run python scripts/render_review.py
+    exit_code: 0
+    stdout: |-
+      ## Summary
+
+      Access request **AR-2043** — `admin` on `acme.storefront.checkout` (production) for jordan@acme.example — overall policy result: **PASS**.
+
+      ## Review Comment
+
+      This is an automated least-privilege policy check only. It does **not** grant, revoke, or approve access — a human access approver makes the final decision.
+
+      ### Checks
+
+      | Rule | Status | Evidence |
+      |---|---|---|
+      | requested_role_in_service_catalog | PASS | role 'admin' is in the catalog for acme.storefront.checkout (allowed: viewer, operator, admin) |
+      | production_grant_time_boxed | PASS | production grant cites OPS-1187 and is time-boxed to 30 day(s) (cap 90) |
+      | privileged_pii_requires_manager_approval | PASS | privileged admin on PII service in production carries manager approval |
+
+      ### Verified Inputs
+
+      - Request ID: `AR-2043`
+      - Requestor: `jordan@acme.example`
+      - Service: `acme.storefront.checkout`
+      - Role: `admin`
+      - Environment: `production`
+      - Generated: 2026-07-24 00:00 UTC
+
+      ### Concerns
+
+      - None. All policy checks passed.
+
+      _No grant/revoke action was taken. Route this comment to the access request for human decision._
+    stderr: ''
+
+  - step: analyze-clean_installed_path
+    type: command
+    command_prefix: uv run --project .claude/skills/access-review python .claude/skills/access-review/scripts/analyze_request.py
+    exit_code: 0
+    stdout: |-
+      {
+        "request_id": "AR-2043",
+        "requestor": "jordan@acme.example",
+        "service": "acme.storefront.checkout",
+        "role": "admin",
+        "environment": "production",
+        "checks": [
+          {"rule": "requested_role_in_service_catalog", "status": "pass", "evidence": "role 'admin' is in the catalog for acme.storefront.checkout (allowed: viewer, operator, admin)"},
+          {"rule": "production_grant_time_boxed", "status": "pass", "evidence": "production grant cites OPS-1187 and is time-boxed to 30 day(s) (cap 90)"},
+          {"rule": "privileged_pii_requires_manager_approval", "status": "pass", "evidence": "privileged admin on PII service in production carries manager approval"}
+        ],
+        "summary": "pass"
+      }
+    stderr: ''
+
+  - step: render-clean_installed_path
+    type: command
+    command_prefix: uv run --project .claude/skills/access-review python .claude/skills/access-review/scripts/render_review.py
+    exit_code: 0
+    stdout: |-
+      ## Summary
+
+      Access request **AR-2043** — `admin` on `acme.storefront.checkout` (production) for jordan@acme.example — overall policy result: **PASS**.
+
+      ## Review Comment
+
+      This is an automated least-privilege policy check only. It does **not** grant, revoke, or approve access — a human access approver makes the final decision.
+
+      ### Checks
+
+      | Rule | Status | Evidence |
+      |---|---|---|
+      | requested_role_in_service_catalog | PASS | role 'admin' is in the catalog for acme.storefront.checkout (allowed: viewer, operator, admin) |
+      | production_grant_time_boxed | PASS | production grant cites OPS-1187 and is time-boxed to 30 day(s) (cap 90) |
+      | privileged_pii_requires_manager_approval | PASS | privileged admin on PII service in production carries manager approval |
+
+      ### Verified Inputs
+
+      - Request ID: `AR-2043`
+      - Requestor: `jordan@acme.example`
+      - Service: `acme.storefront.checkout`
+      - Role: `admin`
+      - Environment: `production`
+      - Generated: 2026-07-24 00:00 UTC
+
+      ### Concerns
+
+      - None. All policy checks passed.
+
+      _No grant/revoke action was taken. Route this comment to the access request for human decision._
+    stderr: ''
+
+  # Catch-all: any other replayed command in this case fails closed rather
+  # than silently succeeding, per eval-framework strict replay.
+  - step: catch-all
+    type: command
+    command_prefix: ""
+    exit_code: 1
+    stdout: ''
+    stderr: "unexpected command: no fixture configured for this invocation"
+
+evaluation:
+  case_id: access-review.happy_path.clean_request_all_pass.11f2a6c0
+  type: happy_path
+  label: clean_request_all_pass
