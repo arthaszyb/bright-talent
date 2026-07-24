@@ -112,6 +112,17 @@ scaffold versions (`scaffold/VERSION`).
   secret.
 
 ### Fixed
+- skills-ci release pipeline no longer blocks itself. The `lint` and
+  `version-check` jobs matrixed over a hardcoded `[ticket-review]`
+  **unconditionally**, so any change under `skills/skills/**` (e.g. adding a
+  second skill) re-ran `version-check` on the unchanged, already-released
+  ticket-review and failed it (`0.1.2` is not strictly greater than the
+  existing `ticket-review/v0.1.2` tag) — turning the whole pipeline red on an
+  unrelated skill. The gate jobs (lint, version-check, triggers, safety, e2e,
+  auto-tag) now derive their matrix from `detect-release`'s changed-skill set
+  (`detect_release.py --changed-json` → a `fromJSON` dynamic matrix), so only
+  skills that actually changed are gated and auto-tag only tags what changed.
+  This unblocks introducing additional skills.
 - context-isolator hook (security floor): a prompt containing a ```` ```log ````
   fenced block or an unlabeled fenced code block produced corrupted
   `<untrusted_data>` markup — the loose "log"/"code" context cues (sections

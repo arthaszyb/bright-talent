@@ -62,15 +62,9 @@ def version_at(ref: str, skill_name: str, repo_root: Path) -> str | None:
     return fm.get("version")
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base", default="HEAD~1", help="base git ref (default: HEAD~1)")
-    parser.add_argument("--head", default="HEAD", help="head git ref (default: HEAD)")
-    args = parser.parse_args()
-
-    repo_root = Path(run_git(["rev-parse", "--show-toplevel"]))
-
-    diff_output = run_git(["diff", "--name-only", args.base, args.head], cwd=repo_root)
+def changed_skill_names(base: str, head: str, repo_root: Path) -> set[str]:
+    """Skill directory names touched by the diff between `base` and `head`."""
+    diff_output = run_git(["diff", "--name-only", base, head], cwd=repo_root)
     changed_files = [line for line in diff_output.splitlines() if line.strip()]
 
     skill_names: set[str] = set()
@@ -82,6 +76,30 @@ def main() -> int:
         parts = rest.split("/", 1)
         if parts and parts[0]:
             skill_names.add(parts[0])
+    return skill_names
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--base", default="HEAD~1", help="base git ref (default: HEAD~1)")
+    parser.add_argument("--head", default="HEAD", help="head git ref (default: HEAD)")
+    parser.add_argument(
+        "--changed-json",
+        action="store_true",
+        help="print a JSON array of changed skill names and exit 0 (for a dynamic "
+        "CI matrix); does not run the version-bump gate",
+    )
+    args = parser.parse_args()
+
+    repo_root = Path(run_git(["rev-parse", "--show-toplevel"]))
+
+    skill_names = changed_skill_names(args.base, args.head, repo_root)
+
+    if args.changed_json:
+        import json
+
+        print(json.dumps(sorted(skill_names)))
+        return 0
 
     if not skill_names:
         print("no skill changes")

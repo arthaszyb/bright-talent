@@ -30,23 +30,37 @@ jobs:
   detect-release:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Emit the set of skills that actually changed in this range so the gate
+    # jobs below only run against those. Gating an *unchanged* skill is wrong:
+    # its version already equals its release tag, so version-check would fail
+    # it — which would block every future skills/skills/** change (e.g. adding
+    # a new skill) on an unrelated, already-released one.
+    outputs:
+      skills: ${{ steps.detect.outputs.skills }}
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - uses: astral-sh/setup-uv@v3
       - name: detect-release
+        id: detect
         run: |
-          uv run --project skills/ci python skills/ci/detect_release.py \
-            --base "${{ github.event.pull_request.base.sha || 'HEAD~1' }}" \
-            --head "${{ github.event.pull_request.head.sha || 'HEAD' }}"
+          BASE="${{ github.event.pull_request.base.sha || 'HEAD~1' }}"
+          HEAD="${{ github.event.pull_request.head.sha || 'HEAD' }}"
+          # Iron rule #1: any changed skill must bump its version (gate fails otherwise).
+          uv run --project skills/ci python skills/ci/detect_release.py --base "$BASE" --head "$HEAD"
+          # Machine-readable changed-skill list for the downstream dynamic matrix.
+          skills="$(uv run --project skills/ci python skills/ci/detect_release.py --base "$BASE" --head "$HEAD" --changed-json)"
+          echo "skills=$skills" >> "$GITHUB_OUTPUT"
+          echo "changed skills: $skills"
 
   lint:
     needs: detect-release
+    if: needs.detect-release.outputs.skills != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       matrix:
-        skill: [ticket-review]
+        skill: ${{ fromJSON(needs.detect-release.outputs.skills) }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
@@ -56,11 +70,12 @@ jobs:
 
   version-check:
     needs: detect-release
+    if: needs.detect-release.outputs.skills != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       matrix:
-        skill: [ticket-review]
+        skill: ${{ fromJSON(needs.detect-release.outputs.skills) }}
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -70,14 +85,15 @@ jobs:
           uv run --project skills/ci python skills/ci/version_check.py skills/skills/${{ matrix.skill }}
 
   triggers:
-    needs: [lint, version-check]
+    needs: [detect-release, lint, version-check]
+    if: needs.detect-release.outputs.skills != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     strategy:
       matrix:
-        skill: [ticket-review]
+        skill: ${{ fromJSON(needs.detect-release.outputs.skills) }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
@@ -91,14 +107,15 @@ jobs:
           uv run --project eval de-eval triggers skills/skills/${{ matrix.skill }}
 
   safety:
-    needs: [lint, version-check]
+    needs: [detect-release, lint, version-check]
+    if: needs.detect-release.outputs.skills != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     strategy:
       matrix:
-        skill: [ticket-review]
+        skill: ${{ fromJSON(needs.detect-release.outputs.skills) }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
@@ -112,14 +129,15 @@ jobs:
           uv run --project eval de-eval safety skills/skills/${{ matrix.skill }}
 
   e2e:
-    needs: [triggers, safety]
+    needs: [detect-release, triggers, safety]
+    if: needs.detect-release.outputs.skills != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     strategy:
       matrix:
-        skill: [ticket-review]
+        skill: ${{ fromJSON(needs.detect-release.outputs.skills) }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
@@ -133,13 +151,13 @@ jobs:
           uv run --project eval de-eval e2e skills/skills/${{ matrix.skill }}
 
   auto-tag:
-    needs: [e2e]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [detect-release, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.detect-release.outputs.skills != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       matrix:
-        skill: [ticket-review]
+        skill: ${{ fromJSON(needs.detect-release.outputs.skills) }}
     steps:
       - uses: actions/checkout@v4
         with:
