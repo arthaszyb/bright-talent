@@ -10,6 +10,16 @@ scaffold versions (`scaffold/VERSION`).
 ## [Unreleased]
 
 ### Security
+- Governance console draft path-traversal write fixed: the CONFIG_EDIT
+  allowlist's `kb/team/` prefix rule admitted paths like
+  `kb/team/../../../etc/x`, which survived the check and only resolved when
+  the workspace materializer ran `ws / path`, escaping the temp workspace at
+  write time and breaking the "a config change never touches anything
+  outside the instance" invariant. `is_allowed` now rejects any absolute
+  path or `.`/`..` segment up front (`is_safe_relative_path`), and
+  `_materialize_workspace` re-checks each resolved target stays within the
+  workspace as defense-in-depth. Traversal/absolute-path cases added to
+  `console/tests/test_allowlist.py`.
 - Bridge `/mode` no longer lets a non-admin chat user loosen the agent's
   permission mode: the builder's permission-monotonicity rule is now
   enforced on the chat surface too — non-admins may only select a mode

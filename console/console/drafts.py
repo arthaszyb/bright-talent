@@ -27,7 +27,7 @@ import shutil
 import subprocess
 import tempfile
 import uuid
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from .config import Config
 from .db import Database, dumps, loads, row_to_dict
@@ -96,7 +96,32 @@ def is_forbidden(path: str) -> bool:
     return False
 
 
+def is_safe_relative_path(path: str) -> bool:
+    """A draft path must be a plain relative path inside the instance tree.
+
+    The allowlists gate *which* files a draft may touch, but a prefix rule
+    like ``kb/team/`` still admits ``kb/team/../../../etc/x``: the ``..``
+    segments survive the prefix check and only resolve when the workspace
+    materializer does ``ws / path``, escaping the temp workspace at write
+    time. Reject absolute paths and any ``.``/``..`` segment up front so the
+    invariant "a config change never touches anything outside the instance"
+    holds mechanically, not just by convention.
+    """
+    if not path or path != path.strip() or "\x00" in path:
+        return False
+    if path.startswith("/") or "\\" in path:
+        return False
+    parts = PurePosixPath(path).parts
+    if not parts or any(seg in ("..", ".") for seg in parts):
+        return False
+    if PurePosixPath(path).is_absolute():
+        return False
+    return True
+
+
 def is_allowed(operation_type: str, path: str) -> bool:
+    if not is_safe_relative_path(path):
+        return False
     if is_forbidden(path):
         return False
     if path == "VERSION":
@@ -287,8 +312,13 @@ class DraftService:
                 if new_text != text:
                     fp.write_text(new_text)
 
+        ws_resolved = ws.resolve()
         for path, content in draft["files"].items():
-            target = ws / path
+            # Defense-in-depth: is_allowed() already rejects traversal at draft
+            # time, but never let a stored path write outside the workspace.
+            target = (ws / path).resolve()
+            if target != ws_resolved and ws_resolved not in target.parents:
+                raise AllowlistError(f"path {path!r} escapes the draft workspace")
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content)
 
