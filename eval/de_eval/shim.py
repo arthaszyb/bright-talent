@@ -2,17 +2,29 @@
 
 One executable shim per distinct first word of every fixture's
 `command_prefix` in the case, plus a fixed deny-set (`curl wget ssh
-kubectl`) so a stray real call can never escape during replay. Every shim
-runs the same small script; it reconstructs `basename(argv[0]) + " " +
-" ".join(argv[1:])`, ships that string to the fixture server over the unix
-socket named by `DE_EVAL_FIXTURE_SOCK`, and replays the response.
+kubectl`). Every shim runs the same small script; it reconstructs
+`basename(argv[0]) + " " + " ".join(argv[1:])`, ships that string to the
+fixture server over the unix socket named by `DE_EVAL_FIXTURE_SOCK`, and
+replays the response.
+
+Scope of the guarantee (be precise, this is a security property): the shim
+directory is *prepended* to `PATH`, so interception covers exactly the
+commands that have a shim — the fixtures' own first words plus the
+deny-set. A command with no shim resolves to the real binary further down
+`PATH` and executes for real; the deny-set exists to cover the dangerous
+cases fixtures would not otherwise name. Invocations by path
+(`/usr/bin/git`, `./tool`) bypass `PATH` lookup entirely and therefore
+cannot be shimmed at all, which is why such a `command_prefix` is rejected
+as an authoring error rather than silently accepted.
 """
 
 from __future__ import annotations
 
+import os
 import stat
 from pathlib import Path
 
+from de_eval.fixture_server import FixtureFileError
 from de_eval.paths import DENY_SET_COMMANDS
 
 SHIM_BODY = '''#!/usr/bin/env python3
@@ -87,7 +99,19 @@ def first_words(fixtures: list[dict]) -> set[str]:
         prefix = (fx.get("command_prefix") or "").strip()
         if not prefix:
             continue
-        words.add(prefix.split()[0])
+        word = prefix.split()[0]
+        if "/" in word or os.sep in word:
+            # Two reasons to refuse. A path invocation skips PATH lookup, so
+            # no shim could ever intercept it — accepting the fixture would
+            # promise isolation that does not exist. And `shim_dir / word`
+            # with an absolute word silently discards shim_dir (pathlib), so
+            # write_shims would write over the real binary's path instead.
+            raise FixtureFileError(
+                "fixture file error: command_prefix must start with a bare command name, "
+                f"got {word!r} — a command invoked by path bypasses PATH lookup and cannot "
+                "be shimmed, so strict replay could not intercept it"
+            )
+        words.add(word)
     return words
 
 
@@ -97,9 +121,17 @@ def shim_names_for_case(fixtures: list[dict]) -> set[str]:
 
 def write_shims(shim_dir: Path, names: set[str]) -> list[Path]:
     shim_dir.mkdir(parents=True, exist_ok=True)
+    resolved_root = shim_dir.resolve()
     written: list[Path] = []
     for name in sorted(names):
         path = shim_dir / name
+        # Defense in depth: first_words() already rejects path-bearing names,
+        # but never write a shim outside the shim directory — an absolute
+        # name would otherwise land on the real binary's path.
+        if path.resolve().parent != resolved_root:
+            raise FixtureFileError(
+                f"fixture file error: shim name {name!r} would write outside the shim directory"
+            )
         path.write_text(SHIM_BODY, encoding="utf-8")
         mode = path.stat().st_mode
         path.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)

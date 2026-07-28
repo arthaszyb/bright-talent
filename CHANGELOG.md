@@ -131,6 +131,21 @@ scaffold versions (`scaffold/VERSION`).
   secret.
 
 ### Fixed
+- A PATH shim can no longer be written outside the shim directory, and the
+  strict-replay guarantee is now stated accurately. `first_words` took the
+  first token of a `command_prefix` verbatim, so an absolute prefix
+  (`/usr/bin/git commit`) yielded the shim name `/usr/bin/git` — and
+  `shim_dir / "/usr/bin/git"` discards `shim_dir` entirely in pathlib, so
+  `write_shims` would write the shim script over the real binary's path
+  (clobbering it where writable, `PermissionError` otherwise). Path
+  invocations also bypass `PATH` lookup, so they could never have been
+  intercepted: they are now rejected as an authoring error, and
+  `write_shims` re-checks containment as defense in depth. The module
+  docstring previously claimed "a stray real call can never escape during
+  replay"; interception in fact covers exactly the shimmed commands (the
+  fixtures' first words plus the deny-set), so the docstring now says that
+  precisely. No existing fixture used a path-bearing prefix. New tests in
+  `eval/tests/test_shim.py`.
 - A failed console draft transition no longer strands the draft or loses the
   error. `validate()` / `build_test()` move the draft into an intermediate
   state (`VALIDATING` / `BUILD_TESTING`) and audit `Started` before shelling
