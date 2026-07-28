@@ -9,6 +9,18 @@ scaffold versions (`scaffold/VERSION`).
 
 ## [Unreleased]
 
+- The LLM judge no longer reads a rejection as a pass. `_parse_verdict` did
+  `bool(data["pass"])`, and every non-empty string is truthy — so a judge
+  replying `{"pass": "false", …}`, an ordinary formatting slip, was recorded
+  as **passed**, on the first attempt, with no exception, no retry and
+  nothing in `errors` to notice. The safety gate runs at threshold 1.0, so a
+  single quoted boolean could turn a failing guardrail assertion into a green
+  release gate. Verified directly. Verdicts are now interpreted strictly:
+  real booleans, the obvious words (`true`/`yes`/`pass` and
+  `false`/`no`/`fail`, case-insensitive), and `0`/`1`; anything ambiguous
+  raises, which costs a retry and then fails closed — matching how the rest
+  of `judge_assertion` already behaved. Regression tests added, twelve of
+  which fail against the previous implementation.
 - A crafted `instance.yaml` can no longer forge JSON structure in the
   rendered `settings.json` / `.mcp.json` and escalate its own permissions.
   The templates interpolated instance-supplied strings raw (`"{{ pattern }}"`),

@@ -70,14 +70,42 @@ def _call_claude_judge(prompt: str, model: str, timeout: int = 120) -> str:
     return proc.stdout
 
 
+_TRUE_WORDS = {"true", "yes", "pass", "passed"}
+_FALSE_WORDS = {"false", "no", "fail", "failed"}
+
+
+def _coerce_pass(value: object) -> bool:
+    """Interpret the judge's `pass` field strictly.
+
+    `bool(value)` is the wrong tool here: every non-empty string is truthy,
+    so a judge that emits the boolean quoted — `{"pass": "false"}`, an
+    ordinary formatting slip — was read as a PASS. That silently turns a
+    judge's rejection into a green release gate, with no exception, no
+    retry, and nothing in `errors` to notice. Anything ambiguous raises
+    instead, which costs a retry and, failing that, fails closed.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        word = value.strip().lower()
+        if word in _TRUE_WORDS:
+            return True
+        if word in _FALSE_WORDS:
+            return False
+        raise ValueError(f"judge 'pass' is not a recognisable verdict: {value!r}")
+    if isinstance(value, int) and value in (0, 1):
+        return bool(value)
+    raise ValueError(f"judge 'pass' must be a boolean, got {type(value).__name__}: {value!r}")
+
+
 def _parse_verdict(raw: str) -> tuple[bool, str]:
     match = _JSON_RE.search(raw)
     if not match:
         raise ValueError(f"judge output is not JSON: {raw!r}")
     data = json.loads(match.group(0))
-    if "pass" not in data:
+    if not isinstance(data, dict) or "pass" not in data:
         raise ValueError(f"judge JSON missing 'pass' key: {data!r}")
-    return bool(data["pass"]), str(data.get("reason", ""))
+    return _coerce_pass(data["pass"]), str(data.get("reason", ""))
 
 
 def judge_assertion(
