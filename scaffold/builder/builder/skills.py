@@ -123,6 +123,26 @@ def _git_commit(path: Path, ref: str | None) -> str | None:
     return None
 
 
+def _registry_has_tags(path: Path) -> bool:
+    """True if the repo containing `path` has any tags at all.
+
+    A shallow CI checkout (`actions/checkout` without `fetch-depth: 0`) has
+    no tags, so *every* pin looks unresolvable there. That is "cannot
+    verify", not "bad pin" — telling them apart keeps the pin warning
+    trustworthy instead of crying wolf on every CI build.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(path), "tag", "--list"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        return out.returncode == 0 and bool(out.stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
 def resolve_and_install(
     instance_dir: Path, runtime_dir: Path
 ) -> tuple[list[dict], list[dict], list[str]]:
@@ -192,9 +212,24 @@ def resolve_and_install(
             {"name": dep_name, "description": _skill_description(skill_dir)}
         )
         pin = dep_spec.get("tag") or dep_spec.get("commit")
+        commit = _git_commit(skill_dir, pin)
+        if pin and commit is None and _registry_has_tags(skill_dir):
+            # The skill is installed from the registry's *working tree*, so an
+            # unresolvable pin (typo, deleted tag, or a skill that was never
+            # released) would otherwise ship silently with "commit": null —
+            # the lock file would claim a version that was never verified.
+            # Say so loudly; the pin is the whole point of the supply chain.
+            # (Guarded by _registry_has_tags so a tagless/shallow checkout,
+            # where nothing can be verified, does not produce a false alarm.)
+            warnings.append(
+                f"skills: '{dep_name}' pins {pin!r}, which does not resolve to a commit in "
+                f"{skill_dir} — the skill was installed from the registry's current working "
+                "tree, NOT the pinned release, and skills-lock.json records commit=null. "
+                "Check the tag exists (git tag --list) and has been pushed."
+            )
         lock_skills[dep_name] = {
             "version": pin or "latest",
-            "commit": _git_commit(skill_dir, pin),
+            "commit": commit,
             "integrity": f"sha256:{_sha256_tree(skill_dir)}",
         }
 

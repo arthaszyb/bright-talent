@@ -125,6 +125,21 @@ scaffold versions (`scaffold/VERSION`).
   secret.
 
 ### Fixed
+- Builder no longer accepts an unresolvable skill pin silently. Skills are
+  copied from the registry's **working tree**, and the `tag:` pin was only
+  used for lock-file metadata: if it named a tag that does not exist (a typo,
+  a deleted tag, or a skill that was never released), `git rev-parse` failed,
+  `_git_commit` returned `None`, and the build still exited 0 — installing
+  something other than the pinned release while `skills-lock.json` recorded
+  `"commit": null`. For a project whose headline claim is a versioned
+  supply chain of tag-released skills, the pin has to be enforced or at least
+  surfaced. `resolve_and_install` now emits a warning naming the unresolvable
+  pin. The check is guarded by `_registry_has_tags`, so a shallow/tagless
+  checkout (where *nothing* can be verified) does not raise a false alarm on
+  every build; `repo-ci`'s builder job now checks out with `fetch-depth: 0`
+  so the pin is genuinely validated in CI rather than sitting permanently in
+  "cannot verify" mode. Regression tests cover the bad-pin, tagless, and
+  unpinned cases.
 - skills-ci release pipeline no longer blocks itself. The `lint` and
   `version-check` jobs matrixed over a hardcoded `[ticket-review]`
   **unconditionally**, so any change under `skills/skills/**` (e.g. adding a

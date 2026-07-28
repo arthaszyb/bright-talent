@@ -131,6 +131,91 @@ def test_resolve_installs_skill_files_and_writes_lock(tmp_path):
     assert entry["integrity"].startswith("sha256:")
 
 
+def test_resolve_warns_when_pin_does_not_resolve(tmp_path):
+    """An unresolvable pin must never install silently.
+
+    Skills are copied from the registry's *working tree*, so a pin that names
+    a tag which does not exist (typo, deleted tag, or a skill that was never
+    released) still installs — but it installs something other than the
+    pinned release, and the lock file records commit=null. That is a
+    supply-chain hole if it happens quietly, so the build has to say so.
+    """
+    _init_registry(tmp_path)
+    instance = tmp_path / "instance"
+    instance.mkdir()
+    (instance / "skills.yaml").write_text(
+        "registries:\n  local:\n    url: \"file://../registry\"\n"
+        "default_registry: local\n"
+        "dependencies:\n  demo-skill:\n    registry: local\n"
+        "    tag: \"demo-skill/v9.9.9-never-released\"\n",
+        encoding="utf-8",
+    )
+    runtime = instance / "runtime"
+    runtime.mkdir()
+
+    skills_tmpl, manifest, warnings = skills.resolve_and_install(instance, runtime)
+
+    # Still installed (working-tree copy), but loudly flagged.
+    assert skills_tmpl == [{"name": "demo-skill", "description": "Does the thing well."}]
+    assert any("does not resolve to a commit" in w for w in warnings), warnings
+    assert any("demo-skill/v9.9.9-never-released" in w for w in warnings), warnings
+
+    import json
+    entry = json.loads((instance / "skills-lock.json").read_text())["skills"]["demo-skill"]
+    assert entry["commit"] is None
+    assert entry["version"] == "demo-skill/v9.9.9-never-released"
+
+
+def test_resolve_does_not_warn_when_registry_has_no_tags(tmp_path):
+    """A tagless checkout cannot verify any pin — that is not a bad pin.
+
+    `actions/checkout` without fetch-depth: 0 fetches no tags, so every pin
+    would look unresolvable in CI. Warning there would be a false alarm on
+    every build and would train people to ignore the warning that matters.
+    """
+    reg = _init_registry(tmp_path)
+    # Drop every tag to mimic a shallow/tagless CI checkout.
+    subprocess.run(["git", "tag", "-d", "demo-skill/v1.0.0"], cwd=reg, check=True,
+                   capture_output=True)
+
+    instance = tmp_path / "instance"
+    instance.mkdir()
+    (instance / "skills.yaml").write_text(
+        "registries:\n  local:\n    url: \"file://../registry\"\n"
+        "default_registry: local\n"
+        "dependencies:\n  demo-skill:\n    registry: local\n"
+        "    tag: \"demo-skill/v1.0.0\"\n",
+        encoding="utf-8",
+    )
+    runtime = instance / "runtime"
+    runtime.mkdir()
+
+    _tmpl, _manifest, warnings = skills.resolve_and_install(instance, runtime)
+    assert not any("does not resolve to a commit" in w for w in warnings), warnings
+
+
+def test_resolve_unpinned_dependency_does_not_warn(tmp_path):
+    """No pin at all ("latest") is a deliberate choice, not a broken pin."""
+    _init_registry(tmp_path)
+    instance = tmp_path / "instance"
+    instance.mkdir()
+    (instance / "skills.yaml").write_text(
+        "registries:\n  local:\n    url: \"file://../registry\"\n"
+        "default_registry: local\n"
+        "dependencies:\n  demo-skill:\n    registry: local\n",
+        encoding="utf-8",
+    )
+    runtime = instance / "runtime"
+    runtime.mkdir()
+
+    _tmpl, _manifest, warnings = skills.resolve_and_install(instance, runtime)
+    assert not any("does not resolve to a commit" in w for w in warnings), warnings
+
+    import json
+    entry = json.loads((instance / "skills-lock.json").read_text())["skills"]["demo-skill"]
+    assert entry["version"] == "latest"
+
+
 def test_resolve_skips_missing_registry_with_warning(tmp_path):
     instance = tmp_path / "instance"
     instance.mkdir()

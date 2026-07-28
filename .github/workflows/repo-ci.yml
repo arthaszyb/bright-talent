@@ -44,6 +44,12 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        # fetch-depth: 0 brings the skill release tags with it. Without them
+        # every skills.yaml pin is unverifiable here, so the builder's
+        # unresolvable-pin check would sit permanently in "cannot verify"
+        # mode and the reference instance's pin would never actually be
+        # validated by CI.
+        with: { fetch-depth: 0 }
       - uses: astral-sh/setup-uv@v3
       - name: merge-invariant unit tests
         run: uv run --project scaffold/builder --extra dev pytest scaffold/builder/tests -q
