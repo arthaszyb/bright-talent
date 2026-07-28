@@ -46,6 +46,12 @@ scaffold versions (`scaffold/VERSION`).
   escalation gate).
 
 ### Added
+- repo-ci's deterministic eval gates (`de-eval lint`, `de-eval e2e --dry-run`)
+  now run over **every** skill in the registry instead of only
+  `ticket-review`, discovered by globbing `skills/skills/*/SKILL.md` — so a
+  newly added skill is covered the moment it lands, with no workflow edit. A
+  skill without CI coverage is a skill nobody is checking; `access-review`
+  had none until now. Both skills pass both gates.
 - `access-review`, a **second reference skill** — a security/compliance
   worker that reviews a service access-grant request against a least-privilege
   policy (role catalog, production time-boxing, privileged-PII manager

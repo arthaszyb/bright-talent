@@ -61,7 +61,7 @@ flowchart LR
 |---|---|---|
 | `scaffold/` | PLATFORM | 安全地板（6 个钩子、4 组策略包）、Jinja2 模板、14 阶段确定性构建器、`de` CLI |
 | `instances/acme-checkout-sre/` | RUNTIME | 声明式智能员工实例：`instance.yaml` + 团队知识库；`runtime/` 是编译产物，永不手改 |
-| `skills/` | SUPPLY | 版本化技能仓库（`ticket-review`，git tag 发布）+ CI 门禁脚本 |
+| `skills/` | SUPPLY | 版本化技能仓库（`ticket-review` SRE worker + `access-review` 访问治理 worker，git tag 发布）+ CI 门禁脚本 |
 | `eval/` | SUPPLY | `de-eval`：lint / triggers / safety / e2e 门禁，PATH-shim 严格回放 + 固定版本的 LLM 裁判 |
 | `bridge/` | ACCESS | 聊天 webhook 桥接：HMAC 校验事件 → 持久 Claude 会话 + 记忆注入 |
 | `console/` | PLATFORM | 治理控制台：舰队健康分、漂移检测、基于草稿的配置变更 → mock MR |
@@ -81,6 +81,12 @@ flowchart LR
 | campaign_cooldown_for_scale_down | **FAIL** | 活动 'mid-year-flash-sale' 结束 2 天后即请求缩容（冷却期=7 天） |
 
 > _未做任何批准/拒绝动作。请将此评论路由到工单交由人类决定。_
+
+同一套脚手架可以原封不动地承载**另一种 worker 原型**：
+[`access-review`](skills/skills/access-review/) 是一个安全合规 worker，
+依据最小权限策略（角色目录、生产授权时限化、PII 服务上的特权角色需经理批准）
+审查服务访问授权请求，产出同样"仅评论、人类决定"的结论——这证明它是一个
+**平台**，而不是一个定制机器人。
 
 ## 五分钟上手
 

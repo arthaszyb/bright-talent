@@ -92,10 +92,30 @@ jobs:
       - uses: astral-sh/setup-uv@v3
       - name: pytest
         run: uv run --project eval --extra dev pytest eval/tests -q
-      - name: de-eval lint on the released skill (deterministic gate)
-        run: uv run --project eval de-eval lint skills/skills/ticket-review
-      - name: de-eval e2e dry-run (fixture runtime + replay wiring, no LLM)
-        run: uv run --project eval de-eval e2e skills/skills/ticket-review --dry-run
+      # Every skill in the registry gets the deterministic gates, not just the
+      # first one — a skill added without CI coverage is a skill nobody is
+      # checking. Discovered by globbing SKILL.md so a new skill is covered
+      # the moment it lands, with no workflow edit.
+      - name: de-eval lint on every skill (deterministic gate)
+        run: |
+          set -euo pipefail
+          for skill_md in skills/skills/*/SKILL.md; do
+            skill_dir="$(dirname "$skill_md")"
+            echo "::group::de-eval lint $skill_dir"
+            uv run --project eval de-eval lint "$skill_dir"
+            echo "::endgroup::"
+          done
+      - name: de-eval e2e dry-run on every skill (fixture runtime + replay wiring, no LLM)
+        # Note: the fixture instance under eval/ is shared and rebuilt per
+        # skill, so these run sequentially rather than in parallel.
+        run: |
+          set -euo pipefail
+          for skill_md in skills/skills/*/SKILL.md; do
+            skill_dir="$(dirname "$skill_md")"
+            echo "::group::de-eval e2e --dry-run $skill_dir"
+            uv run --project eval de-eval e2e "$skill_dir" --dry-run
+            echo "::endgroup::"
+          done
 
   shellcheck:
     runs-on: ubuntu-latest

@@ -20,7 +20,7 @@ de-demo/
 │   ├── instance-test-seeds/    # 5 common guardrail *.mock.yaml (copied verbatim from docs)
 │   └── builder/                # Python package (uv project: pyproject.toml)
 ├── instances/acme-checkout-sre/
-├── skills/skills/ticket-review/
+├── skills/skills/               # ticket-review/ (SRE), access-review/ (access governance)
 ├── eval/                       # de-eval (uv project)
 ├── bridge/                     # FastAPI (uv project)
 ├── console/                    # backend/ (FastAPI+SQLite) + frontend/ (React SPA)
