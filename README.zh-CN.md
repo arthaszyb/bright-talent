@@ -160,7 +160,9 @@ MR），每次状态迁移都写入审计日志：
 `repo-ci` 工作流运行所有确定性门禁：ruff 代码检查、虚构宇宙泄漏检查、
 构建器合并不变量单元测试（越权覆盖抛 `BuildConflictError`、权限放宽抛
 `MonotonicityError`）、参考实例的完整 `de validate && de build` 加二次构建
-确定性校验，以及 bridge + console 的 pytest 套件。`skills-ci` 工作流把守
+确定性校验、bridge + console 的 pytest 套件，以及对仓库中**每一个**技能运行
+的确定性评测门禁（`de-eval lint` 与 `de-eval e2e --dry-run`）——新技能落地即
+自动被覆盖。`skills-ci` 工作流把守
 技能发布（`detect-release → lint → version-check → triggers → safety →
 e2e → tag`）；配置 `ANTHROPIC_API_KEY` secret 后，LLM 驱动的门禁会真实运行。
 

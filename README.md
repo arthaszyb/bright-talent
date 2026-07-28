@@ -173,8 +173,10 @@ The `repo-ci` workflow runs the deterministic gates: ruff lint, the
 fictional-universe leak check, the builder's merge-invariant unit tests
 (`BuildConflictError` on shadowing, `MonotonicityError` on permission
 loosening), a full `de validate && de build` of the reference instance with
-a build-determinism double-build check, and the bridge + console pytest
-suites. The `skills-ci` workflow gates skill releases
+a build-determinism double-build check, the bridge + console pytest
+suites, and the deterministic eval gates (`de-eval lint` and `de-eval e2e
+--dry-run`) over **every** skill in the registry — a new skill is covered the
+moment it lands. The `skills-ci` workflow gates skill releases
 (`detect-release → lint → version-check → triggers → safety → e2e → tag`);
 its LLM-driven gates run live when an `ANTHROPIC_API_KEY` secret is
 configured.
