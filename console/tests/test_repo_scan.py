@@ -49,3 +49,63 @@ def test_missing_local_two_way():
 def test_templated_ignores_scaffold_hash_even_if_passed():
     # scaffold_known=False must not consult scaffold_sha at all
     assert _status_for_file("rec", "rec", "irrelevant", scaffold_known=False) == "up_to_date"
+
+
+# ---- cache invalidation: a scaffold upgrade must not serve a stale status ---
+
+def test_scan_cache_reflects_a_scaffold_change(tmp_path):
+    """`template_moved` depends on files outside the instance directory.
+
+    A managed file's status is a three-way comparison against the scaffold's
+    *current* template, so keying the scan cache on the instance alone let a
+    scaffold upgrade go unnoticed: the console kept reporting `up_to_date`
+    for files that had genuinely fallen behind, which is precisely the drift
+    an upgrade creates.
+    """
+    import shutil
+    from pathlib import Path
+
+    from console.config import Config
+    from console.repo_scan import RepoScanner
+
+    repo_root = Path(__file__).resolve().parents[2]
+    work = tmp_path / "repo"
+    for d in ("scaffold", "instances", "skills"):
+        shutil.copytree(repo_root / d, work / d, symlinks=True)
+
+    cfg = Config.from_args(repo=str(work), port=0, db_path=str(tmp_path / "t.db"))
+    scanner = RepoScanner(cfg)
+    target = ".claude/hooks/context-isolator.py"
+
+    def status_of(force=False):
+        scan = scanner.scan_instance("acme-checkout-sre", force=force)
+        return next(f["status"] for f in scan["managed_files"] if f["path"] == target)
+
+    assert status_of() == "up_to_date"
+
+    # Move the scaffold forward, touching nothing inside the instance.
+    template = work / "scaffold" / "base" / target
+    template.write_text(template.read_text() + "\n# scaffold moved forward\n")
+
+    assert status_of() == "template_moved", "cached scan hid a real scaffold upgrade"
+    assert status_of(force=True) == "template_moved"
+
+
+def test_scan_cache_still_serves_repeat_scans(tmp_path):
+    """The scaffold key must not defeat caching when nothing has changed."""
+    import shutil
+    from pathlib import Path
+
+    from console.config import Config
+    from console.repo_scan import RepoScanner
+
+    repo_root = Path(__file__).resolve().parents[2]
+    work = tmp_path / "repo"
+    for d in ("scaffold", "instances", "skills"):
+        shutil.copytree(repo_root / d, work / d, symlinks=True)
+
+    cfg = Config.from_args(repo=str(work), port=0, db_path=str(tmp_path / "t.db"))
+    scanner = RepoScanner(cfg)
+    first = scanner.scan_instance("acme-checkout-sre")
+    second = scanner.scan_instance("acme-checkout-sre")
+    assert second is first, "an unchanged repo should hit the cache"

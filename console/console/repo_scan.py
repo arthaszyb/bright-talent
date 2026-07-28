@@ -75,7 +75,25 @@ def _tree_signature(path: Path) -> float:
     return latest
 
 
-def _instance_signature(instance_dir: Path) -> tuple:
+def _scaffold_signature(scaffold_dir: Path) -> tuple:
+    """Cache key contribution for the scaffold side of a scan.
+
+    A managed file's status is a three-way comparison — recorded hash, local
+    hash, and the *scaffold's current* hash — so `template_moved` depends on
+    files outside the instance. Keying the cache on the instance alone meant
+    upgrading the scaffold changed nothing the cache could see, and the
+    console kept serving `up_to_date` for files that had genuinely fallen
+    behind. Drift detection that goes stale after an upgrade hides exactly
+    the drift an upgrade creates.
+    """
+    version = scaffold_dir / "VERSION"
+    return (
+        version.stat().st_mtime if version.is_file() else 0.0,
+        _tree_signature(scaffold_dir / "base"),
+    )
+
+
+def _instance_signature(instance_dir: Path, scaffold_dir: Path | None = None) -> tuple:
     keys = [
         "instance.yaml",
         "VERSION",
@@ -90,6 +108,8 @@ def _instance_signature(instance_dir: Path) -> tuple:
         p = instance_dir / k
         sig.append(p.stat().st_mtime if p.is_file() else 0.0)
     sig.append(_tree_signature(instance_dir / "runtime"))
+    if scaffold_dir is not None:
+        sig.append(_scaffold_signature(scaffold_dir))
     return tuple(sig)
 
 
@@ -137,7 +157,7 @@ class RepoScanner:
 
     def scan_instance(self, instance_id: str, force: bool = False) -> dict[str, Any]:
         instance_dir = self.config.instances_dir / instance_id
-        sig = _instance_signature(instance_dir)
+        sig = _instance_signature(instance_dir, self.config.scaffold_dir)
         with self._lock:
             cached = self._cache.get(instance_id)
             if cached is not None and cached[0] == sig and not force:

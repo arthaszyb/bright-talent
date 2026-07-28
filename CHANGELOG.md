@@ -9,6 +9,18 @@ scaffold versions (`scaffold/VERSION`).
 
 ## [Unreleased]
 
+- The governance console no longer hides drift created by a scaffold upgrade.
+  A managed file's status is a three-way comparison — recorded hash, local
+  hash, and the scaffold's *current* template hash — but the scan cache was
+  keyed on the instance directory alone. Upgrading `scaffold/base/**` changed
+  nothing the cache could see, so the console kept serving the cached
+  `up_to_date` for files that had genuinely fallen behind, until some
+  unrelated instance-side mtime happened to invalidate the entry. Nothing in
+  the read path passes `force=True`, so operators simply saw stale status.
+  Reproduced: after a scaffold edit the scan still reported `up_to_date`
+  while `force=True` reported `template_moved`. The cache key now includes a
+  scaffold signature (`VERSION` mtime plus a `base/` tree signature).
+  Repeat scans of an unchanged repo still hit the cache. Tests added.
 - A rejected build no longer destroys the runtime it rejected. `build_runtime`
   cleared `runtime/` in phase 3, but the safety invariants are enforced in
   phases 8-9 (permission monotonicity, immutable env keys, protected MCP
