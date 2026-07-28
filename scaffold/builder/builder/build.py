@@ -26,6 +26,8 @@ from builder import skills as skills_mod
 from builder.errors import BuildError
 
 SCAFFOLD_VERSION_FILE = "VERSION"
+# Staging tree for an in-progress build, swapped onto runtime/ only on success.
+RUNTIME_STAGING_DIRNAME = ".runtime-staging"
 
 
 def resolve_scaffold_root(instance_dir: Path) -> Path:
@@ -87,16 +89,31 @@ def _claude_cli_version() -> str | None:
 
 
 def build_runtime(instance_dir: Path, scaffold_root: Path, config: dict) -> dict:
-    """Runs phases 3-14 against runtime/. Returns dict with manifest_entries,
-    managed_entries, skills list — used by callers/tests."""
+    """Runs phases 3-14 and installs the result at runtime/.
+
+    Builds into a staging directory and swaps it in only once every phase has
+    succeeded. Phases 8 and 9 are where the safety invariants are enforced
+    (permission monotonicity, immutable env keys, protected MCP servers), and
+    they run *after* most of the tree has been written — so clearing runtime/
+    up front meant a correctly-rejected build still destroyed the previous
+    working runtime, leaving a tree with hooks and policy but no
+    settings.json: the file that carries every deny rule. A rejected
+    escalation must not leave the worker less protected than it was.
+
+    Returns dict with manifest_entries, managed_entries, skills list — used
+    by callers/tests.
+    """
     base_root = scaffold_root / "base"
     templates_dir = scaffold_root / "templates"
-    runtime_dir = instance_dir / "runtime"
+    final_runtime_dir = instance_dir / "runtime"
+    # Sibling of the target so the swap below is a same-filesystem rename.
+    staging_dir = instance_dir / RUNTIME_STAGING_DIRNAME
 
-    # Phase 3: clean runtime/
-    if runtime_dir.exists():
-        shutil.rmtree(runtime_dir)
-    runtime_dir.mkdir(parents=True)
+    # Phase 3: start from a clean staging tree
+    if staging_dir.exists():
+        shutil.rmtree(staging_dir)
+    staging_dir.mkdir(parents=True)
+    runtime_dir = staging_dir
 
     manifest_entries: list[dict] = []
     managed_entries: list[dict] = []
@@ -233,6 +250,12 @@ def build_runtime(instance_dir: Path, scaffold_root: Path, config: dict) -> dict
     (runtime_dir / "work").mkdir(parents=True, exist_ok=True)
     (runtime_dir / "log").mkdir(parents=True, exist_ok=True)
 
+    # Every phase succeeded: swap the staged tree in. Only now is the
+    # previous runtime/ discarded.
+    if final_runtime_dir.exists():
+        shutil.rmtree(final_runtime_dir)
+    staging_dir.rename(final_runtime_dir)
+
     return {
         "manifest_entries": manifest_entries,
         "managed_entries": managed_entries,
@@ -264,7 +287,12 @@ def run_build(instance_dir: Path) -> None:
     # Phase 2: load instance config / scaffold root
     scaffold_root = resolve_scaffold_root(instance_dir)
 
-    result = build_runtime(instance_dir, scaffold_root, config)
+    try:
+        result = build_runtime(instance_dir, scaffold_root, config)
+    except BaseException:
+        # Leave no half-built staging tree behind; runtime/ is untouched.
+        shutil.rmtree(instance_dir / RUNTIME_STAGING_DIRNAME, ignore_errors=True)
+        raise
 
     # Phase 14: write manifest + build-info + managed-files (instance root, per S2)
     manifest_path = instance_dir / ".build-manifest.json"

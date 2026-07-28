@@ -9,6 +9,20 @@ scaffold versions (`scaffold/VERSION`).
 
 ## [Unreleased]
 
+- A rejected build no longer destroys the runtime it rejected. `build_runtime`
+  cleared `runtime/` in phase 3, but the safety invariants are enforced in
+  phases 8-9 (permission monotonicity, immutable env keys, protected MCP
+  servers) — so a build that was *correctly* refused had already deleted the
+  previous working tree, leaving hooks and policy in place but **no
+  `settings.json`**, the file carrying every deny rule, and no `.mcp.json`.
+  An instance that attempted an escalation and was refused ended up less
+  protected than before it tried. Verified against the same input before and
+  after: `settings.json` went from MISSING to PRESENT and byte-identical.
+  The build now writes to a staging tree and renames it over `runtime/` only
+  once every phase has passed; a failure removes the staging tree and leaves
+  `runtime/` untouched. Stale staging trees from a killed build are cleared
+  on the next build and are gitignored. Build output and determinism are
+  unchanged. New tests in `scaffold/builder/tests/test_build_atomicity.py`.
 - The LLM judge no longer reads a rejection as a pass. `_parse_verdict` did
   `bool(data["pass"])`, and every non-empty string is truthy — so a judge
   replying `{"pass": "false", …}`, an ordinary formatting slip, was recorded

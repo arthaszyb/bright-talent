@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 node_modules/
 runtime/
+.runtime-staging/
 .base-cache/
 .skills-cache/
 .kb-cache/
