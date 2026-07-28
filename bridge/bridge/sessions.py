@@ -141,12 +141,25 @@ class SessionManager:
         return sum(1 for s in self._sessions.values() if s.is_alive())
 
     async def _evict_lru(self) -> None:
+        # A session with a turn in flight holds its lock. Its last_active_at
+        # is deliberately the *start* of that turn, so a long turn looks like
+        # the least-recently-used candidate — evicting it would kill a
+        # working conversation to make room. Never evict a busy session;
+        # going one over the cap briefly is the cheaper mistake.
         live = [s for s in self._sessions.values() if s.is_alive()]
-        if not live:
+        idle = [s for s in live if not s.lock.locked()]
+        if not idle:
+            if live:
+                logger.warning(
+                    "sessions: max_sessions reached but all %d live session(s) are mid-turn; "
+                    "starting another rather than interrupting one",
+                    len(live),
+                )
             return
-        lru = min(live, key=lambda s: s.last_active_at)
+        lru = min(idle, key=lambda s: s.last_active_at)
         logger.info("sessions: evicting LRU session %s (max_sessions reached)", lru.key)
-        await self._stop_process(lru)
+        async with lru.lock:
+            await self._stop_process(lru)
 
     async def _spawn(self, sess: ClaudeSession) -> None:
         working_dir = sess.working_dir
@@ -209,6 +222,10 @@ class SessionManager:
     async def send_turn(self, key: str, text: str) -> str:
         sess = await self.get_or_start(key)
         async with sess.lock:
+            # Mark activity up front, not just on completion: a turn that runs
+            # longer than idle_timeout_seconds would otherwise still carry the
+            # previous turn's timestamp and look idle to the sweeper.
+            sess.touch()
             reply = await self._send_and_read(sess, text)
             sess.touch()
             self._save_state()
@@ -311,18 +328,35 @@ class SessionManager:
             await self._stop_process(sess)
         self.reset(key)
 
+    def _idle_seconds(self, sess: ClaudeSession) -> float | None:
+        try:
+            last_active = datetime.datetime.fromisoformat(sess.last_active_at)
+        except ValueError:
+            return None
+        return (datetime.datetime.now(datetime.timezone.utc) - last_active).total_seconds()
+
     async def idle_sweep(self) -> None:
         cutoff_seconds = self.config.sessions.idle_timeout_seconds
-        now = datetime.datetime.now(datetime.timezone.utc)
         for sess in list(self._sessions.values()):
             if not sess.is_alive():
                 continue
-            try:
-                last_active = datetime.datetime.fromisoformat(sess.last_active_at)
-            except ValueError:
+            # Busy means a turn holds the lock. Skip without waiting, so one
+            # long turn cannot stall the sweep of every other session.
+            if sess.lock.locked():
                 continue
-            idle_for = (now - last_active).total_seconds()
-            if idle_for > cutoff_seconds:
+            idle_for = self._idle_seconds(sess)
+            if idle_for is None or idle_for <= cutoff_seconds:
+                continue
+            # Take the lock to stop it: the check above raced with any turn
+            # starting during the awaits below, and killing a subprocess out
+            # from under an in-flight turn surfaces to the user as a bogus
+            # "the agent session ended unexpectedly" error.
+            async with sess.lock:
+                if not sess.is_alive():
+                    continue
+                idle_for = self._idle_seconds(sess)
+                if idle_for is None or idle_for <= cutoff_seconds:
+                    continue
                 logger.info("sessions: idling out %s after %.1fs", sess.key, idle_for)
                 await self._stop_process(sess)
 

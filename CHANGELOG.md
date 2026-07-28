@@ -131,6 +131,22 @@ scaffold versions (`scaffold/VERSION`).
   secret.
 
 ### Fixed
+- Session reaping no longer interrupts a turn that is in flight. Both
+  reapers — the idle sweeper and LRU eviction at `max_sessions` — chose their
+  victim by `last_active_at` and stopped the subprocess without holding the
+  session lock, while `send_turn` only refreshed that timestamp *after* the
+  turn finished. A turn running longer than `idle_timeout_seconds` therefore
+  still carried the previous turn's timestamp and looked like the idlest
+  session in the manager, so the sweeper (or, under load, eviction) killed
+  the subprocess mid-turn and the user was told "the agent session ended
+  unexpectedly — please resend", a failure that never happened. Reproduced
+  end to end. `send_turn` now marks activity when the turn starts; both
+  reapers skip sessions whose lock is held and take that lock before
+  stopping, re-checking liveness and idleness under it. Genuinely idle
+  sessions are still reaped. Eviction that finds every live session busy
+  logs and starts one more rather than interrupting a conversation. New
+  tests in `bridge/tests/test_session_lifecycle.py`, three of which fail
+  against the previous implementation.
 - A PATH shim can no longer be written outside the shim directory, and the
   strict-replay guarantee is now stated accurately. `first_words` took the
   first token of a `command_prefix` verbatim, so an absolute prefix
