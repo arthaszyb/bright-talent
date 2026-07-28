@@ -100,3 +100,20 @@ def test_instance_detail_shows_identity(page, console_url):
     body = page.content()
     assert "DE-ACME-CHECKOUT-001" in body
     assert "acme.storefront.checkout" in body
+
+
+def test_instance_detail_renders_unmanaged_drift_section(page, console_url):
+    """Build-tracked files outside the managed set must be visible.
+
+    The API always reported `unmanaged_drift`, but nothing rendered it, and
+    the health score does not deduct for it (its deduction table is fixed by
+    spec). A tampered skill script or kb file therefore appeared in no table
+    and left the instance reading as green.
+    """
+    page.goto(f"{console_url}/#/instances/acme-checkout-sre")
+    page.wait_for_selector("table")
+    body = page.content()
+    assert "Other build-tracked files (drift)" in body
+    # The reference instance is clean, so the empty-state line must show
+    # rather than the section silently rendering nothing at all.
+    assert "No drift: every build-tracked file still matches the manifest." in body

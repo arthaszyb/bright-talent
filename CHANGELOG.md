@@ -10,6 +10,24 @@ scaffold versions (`scaffold/VERSION`).
 ## [Unreleased]
 
 ### Security
+- `de doctor`'s guardrail-seed check now verifies which files are present,
+  not how many. It counted `*.mock.yaml` files and passed on exactly five, so
+  a runtime whose five real guardrail cases had been deleted and replaced by
+  five stubs still reported `[PASS] seeded tests present (5 common guardrail
+  cases)` — the check asserted something stronger than it verified.
+  Reproduced with five junk files. It now checks the five canonical seed
+  names and names any that are missing; extra team-authored cases alongside
+  them still pass. New tests in `scaffold/builder/tests/test_doctor.py`.
+- The governance console now shows drift in build-tracked files outside the
+  managed set. `unmanaged_drift` has always been computed by the scanner and
+  returned by `/api/instances/{id}`, but no view rendered it, and the health
+  score does not deduct for it — its deduction table is fixed by DESIGN.md
+  §S7 ("no reinterpretation"), so that omission is left alone deliberately.
+  The combined effect was that a tampered skill script or kb file appeared in
+  no table and the instance still read green. The instance detail page now
+  has an "Other build-tracked files (drift)" section, with an explicit
+  empty state so a clean instance is distinguishable from a section that
+  renders nothing. Covered by a frontend e2e test.
 - `de diff` now detects a security hook that has been silently disabled.
   The build manifest recorded only `path`/`sha256`/`source`, so drift was a
   pure content comparison — and `chmod -x` on

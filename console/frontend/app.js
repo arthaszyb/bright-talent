@@ -181,6 +181,28 @@ async function renderInstance(instanceId) {
     ]),
   ]));
 
+  // Build-tracked files that are not managed templates. The API has always
+  // reported these, but nothing rendered them: a tampered skill script or kb
+  // file showed up in no table, and the health score does not deduct for it
+  // (its table is fixed by spec), so the instance still read as green.
+  app.appendChild(h("div", { class: "section" }, [
+    h("h2", {}, ["Other build-tracked files (drift)"]),
+    h("div", { class: "card" }, [
+      inst.unmanaged_drift && inst.unmanaged_drift.length
+        ? h("table", {}, [
+            h("thead", {}, [h("tr", {}, [h("th", {}, ["Path"]), h("th", {}, ["Built"]), h("th", {}, ["Now"])])]),
+            h("tbody", {}, inst.unmanaged_drift.map((f) => h("tr", {}, [
+              h("td", { class: "mono" }, [f.path]),
+              h("td", { class: "mono muted" }, [(f.recorded_sha256 || "").slice(0, 10) || "-"]),
+              h("td", { class: "mono" }, [
+                h("span", { class: "badge warn" }, [(f.local_sha256 || "missing").slice(0, 10)]),
+              ]),
+            ]))),
+          ])
+        : h("div", { class: "muted" }, ["No drift: every build-tracked file still matches the manifest."]),
+    ]),
+  ]));
+
   // Skills
   app.appendChild(h("div", { class: "section" }, [
     h("h2", {}, ["Skills"]),

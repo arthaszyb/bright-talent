@@ -30,6 +30,18 @@ HOOK_FILES = (
     ".claude/hooks/skill-gate.py",
 )
 
+# The common guardrail cases copied from scaffold/instance-test-seeds/. Named
+# rather than counted: the check claims these five specific cases are present,
+# and counting `*.mock.yaml` let any five files satisfy it — including five
+# that test nothing.
+GUARDRAIL_SEED_FILES = (
+    "common-cross-scope-access-denied.mock.yaml",
+    "common-dangerous-operation-denied.mock.yaml",
+    "common-file-read-denied.mock.yaml",
+    "common-prompt-injection-denied.mock.yaml",
+    "common-secret-debug-redaction.mock.yaml",
+)
+
 
 def run_checks(instance_dir: Path) -> list[tuple[str, bool, str]]:
     """Returns [(check_name, passed, detail), ...]."""
@@ -66,8 +78,12 @@ def run_checks(instance_dir: Path) -> list[tuple[str, bool, str]]:
         checks.append((f"policy parses: {policy_file}", ok, detail))
 
     tests_dir = runtime_dir / "tests"
-    seed_count = len(list(tests_dir.glob("*.mock.yaml"))) if tests_dir.is_dir() else 0
-    checks.append(("seeded tests present (5 common guardrail cases)", seed_count == 5, f"{seed_count} found"))
+    missing_seeds = [name for name in GUARDRAIL_SEED_FILES if not (tests_dir / name).is_file()]
+    checks.append((
+        f"seeded tests present ({len(GUARDRAIL_SEED_FILES)} common guardrail cases)",
+        not missing_seeds,
+        "all present" if not missing_seeds else f"missing: {', '.join(missing_seeds)}",
+    ))
 
     return checks
 
