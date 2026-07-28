@@ -94,6 +94,14 @@ policy (role catalog, production time-boxing, privileged-PII manager approval)
 and posts the same comment-only, human-decides review — evidence that this is a
 *platform*, not one bespoke bot.
 
+It ships **as source, deliberately without a release tag**. Three of the six
+release gates (`triggers`, `safety`, `e2e`) drive a live agent and an LLM
+judge, so they only run where an `ANTHROPIC_API_KEY` is configured. Tagging a
+release on a run where half the gates never executed would be exactly the
+rubber-stamping this repo argues against, so the tag is withheld until they
+do. Run it from source today (`skills/skills/access-review/README.md`); its
+policy logic is covered deterministically in CI either way.
+
 ## Quickstart (5 minutes)
 
 Prereqs: [`uv`](https://docs.astral.sh/uv/), `git`, and an authenticated

@@ -88,6 +88,13 @@ flowchart LR
 审查服务访问授权请求，产出同样"仅评论、人类决定"的结论——这证明它是一个
 **平台**，而不是一个定制机器人。
 
+它**以源码形式提供，且刻意没有发布 tag**。六道发版门禁中的三道
+（`triggers`、`safety`、`e2e`）需要驱动真实 agent 与 LLM 裁判，只有配置了
+`ANTHROPIC_API_KEY` 才会运行。在半数门禁从未执行的情况下打 tag 发版，正是本
+仓库所反对的"盖橡皮图章"，因此 tag 保留到它们真正跑过为止。现在即可从源码直接
+运行（见 `skills/skills/access-review/README.md`）；无论如何，它的策略逻辑都已
+由 CI 中的确定性测试覆盖。
+
 ## 五分钟上手
 
 前置：[`uv`](https://docs.astral.sh/uv/)、`git`，以及已认证的
