@@ -349,8 +349,9 @@ class DraftService:
             actor_email=actor_email, actor_name=actor_name,
         )
 
-        ws = self._materialize_workspace(draft)
+        ws = None
         try:
+            ws = self._materialize_workspace(draft)
             result = self._run_de(ws, "validate")
             ok = result.returncode == 0
             new_state = STATE_VALIDATED if ok else STATE_DRAFT
@@ -366,8 +367,15 @@ class DraftService:
             if not ok:
                 raise TransitionError(f"validate failed: {(result.stdout + result.stderr)[-2000:]}")
             return self.get_draft(draft_id)
+        except TransitionError:
+            # Already recorded above (state returned to DRAFT, "Failed" audited).
+            raise
+        except Exception as exc:
+            self._fail_transition(draft, "DRAFT_VALIDATE", STATE_VALIDATING, actor_email, actor_name, exc)
+            raise
         finally:
-            self._cleanup_workspace(ws)
+            if ws is not None:
+                self._cleanup_workspace(ws)
 
     def build_test(self, draft_id: str, actor_email: str = "console-demo@local", actor_name: str = "Console Demo User") -> dict:
         draft = self._require_draft(draft_id)
@@ -381,8 +389,9 @@ class DraftService:
             actor_email=actor_email, actor_name=actor_name,
         )
 
-        ws = self._materialize_workspace(draft)
+        ws = None
         try:
+            ws = self._materialize_workspace(draft)
             result = self._run_de(ws, "build")
             ok = result.returncode == 0
             new_state = STATE_BUILD_TESTED if ok else STATE_DRAFT
@@ -398,8 +407,14 @@ class DraftService:
             if not ok:
                 raise TransitionError(f"build-test failed: {(result.stdout + result.stderr)[-2000:]}")
             return self.get_draft(draft_id)
+        except TransitionError:
+            raise
+        except Exception as exc:
+            self._fail_transition(draft, "DRAFT_BUILD_TEST", STATE_BUILDING, actor_email, actor_name, exc)
+            raise
         finally:
-            self._cleanup_workspace(ws)
+            if ws is not None:
+                self._cleanup_workspace(ws)
 
     def create_mr(self, draft_id: str, actor_email: str = "console-demo@local", actor_name: str = "Console Demo User") -> dict:
         draft = self._require_draft(draft_id)
@@ -428,6 +443,37 @@ class DraftService:
             actor_email=actor_email, actor_name=actor_name, metadata=mr,
         )
         return self.get_draft(draft_id)
+
+    def _fail_transition(
+        self,
+        draft: dict,
+        action: str,
+        from_state: str,
+        actor_email: str,
+        actor_name: str,
+        exc: BaseException,
+    ) -> None:
+        """Unwedge a draft whose transition blew up part-way through.
+
+        validate()/build_test() move the draft into an intermediate state
+        (VALIDATING / BUILD_TESTING) and audit "Started" *before* running
+        `de` in a workspace. That subprocess has a 180s timeout, so
+        TimeoutExpired — plus any workspace-materialisation error — is a
+        routine outcome, not an impossible one. Without this, such a failure
+        left the draft parked in the intermediate state forever: no
+        transition accepts it as input, so the draft is unrecoverable, and
+        the audit trail stopped at "Started" with the error lost. Every
+        transition writing an audit row is the console's whole governance
+        claim, so record the failure and return the draft to DRAFT, which is
+        the same state a plain non-zero `de` exit lands on.
+        """
+        self._set_state(draft["draft_id"], STATE_DRAFT)
+        self._audit(
+            instance_id=draft["instance_id"], draft_id=draft["draft_id"], action=action,
+            status="Failed", from_state=from_state, to_state=STATE_DRAFT,
+            actor_email=actor_email, actor_name=actor_name,
+            error=f"{type(exc).__name__}: {exc}"[:4000],
+        )
 
     def _set_state(self, draft_id: str, state: str) -> None:
         self.db.execute(

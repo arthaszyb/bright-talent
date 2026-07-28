@@ -108,3 +108,83 @@ def test_full_happy_path_validate_build_mr(service):
         ["git", "-C", str(service.config.repo_root), "branch", "-D", mr["target_branch"]],
         capture_output=True, text=True,
     )
+
+
+def _audit_rows(db, draft_id):
+    return [
+        dict(r) for r in db.query(
+            "SELECT action, status, from_state, to_state FROM audit_events "
+            "WHERE draft_id = ? ORDER BY rowid",
+            (draft_id,),
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    "method, action, intermediate",
+    [("validate", "DRAFT_VALIDATE", "VALIDATING"), ("build_test", "DRAFT_BUILD_TEST", "BUILD_TESTING")],
+)
+def test_transition_crash_does_not_strand_the_draft(service, db, method, action, intermediate):
+    """A `de` timeout must not brick the draft or lose the error.
+
+    validate()/build_test() enter an intermediate state and audit "Started"
+    before shelling out to `de`, which runs under a 180s timeout. When that
+    timeout (or any workspace error) fired, the draft used to stay in
+    VALIDATING/BUILD_TESTING forever — no transition accepts that as input,
+    so it was unrecoverable — and the audit trail stopped at "Started".
+    """
+    import subprocess
+
+    d = service.create_draft(INSTANCE_ID, "CONFIG_EDIT")
+    draft_id = d["draft_id"]
+    service.set_files(draft_id, {"kb/team/notes.md": "hello"})
+    if method == "build_test":
+        service.validate(draft_id)
+
+    def boom(ws, *args):
+        raise subprocess.TimeoutExpired(cmd="de", timeout=180)
+
+    service._run_de = boom
+    with pytest.raises(subprocess.TimeoutExpired):
+        getattr(service, method)(draft_id)
+
+    # Recoverable, not wedged.
+    assert service.get_draft(draft_id)["state"] == STATE_DRAFT
+
+    # The failure is on the record, with the intermediate state it came from.
+    last = _audit_rows(db, draft_id)[-1]
+    assert last == {
+        "action": action, "status": "Failed",
+        "from_state": intermediate, "to_state": STATE_DRAFT,
+    }
+
+
+def test_workspace_materialisation_failure_is_audited_and_recoverable(service, db):
+    """An error before `de` even runs must be handled the same way."""
+    d = service.create_draft(INSTANCE_ID, "CONFIG_EDIT")
+    draft_id = d["draft_id"]
+    service.set_files(draft_id, {"kb/team/notes.md": "hello"})
+
+    def boom(draft):
+        raise OSError("disk full")
+
+    service._materialize_workspace = boom
+    with pytest.raises(OSError):
+        service.validate(draft_id)
+
+    assert service.get_draft(draft_id)["state"] == STATE_DRAFT
+    last = _audit_rows(db, draft_id)[-1]
+    assert last["status"] == "Failed" and last["to_state"] == STATE_DRAFT
+
+
+def test_successful_transitions_still_audit_normally(service, db):
+    """The new error path must not disturb the happy path's audit trail."""
+    d = service.create_draft(INSTANCE_ID, "CONFIG_EDIT")
+    draft_id = d["draft_id"]
+    service.set_files(draft_id, {"kb/team/notes.md": "hello"})
+    service.validate(draft_id)
+
+    statuses = [(r["action"], r["status"]) for r in _audit_rows(db, draft_id)]
+    assert ("DRAFT_VALIDATE", "Started") in statuses
+    assert ("DRAFT_VALIDATE", "Succeeded") in statuses
+    assert not any(s == "Failed" for _a, s in statuses)

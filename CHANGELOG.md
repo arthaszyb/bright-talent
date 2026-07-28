@@ -131,6 +131,20 @@ scaffold versions (`scaffold/VERSION`).
   secret.
 
 ### Fixed
+- A failed console draft transition no longer strands the draft or loses the
+  error. `validate()` / `build_test()` move the draft into an intermediate
+  state (`VALIDATING` / `BUILD_TESTING`) and audit `Started` before shelling
+  out to `de`, which runs under a 180s timeout — so `TimeoutExpired` (or any
+  workspace-materialisation error) is a routine outcome. Neither was caught:
+  the draft stayed in the intermediate state permanently, where no
+  transition accepts it as input, and the audit trail stopped at `Started`
+  with the error discarded. Reproduced end to end. Both transitions now
+  record a `Failed` audit row carrying the exception and return the draft to
+  `DRAFT` — the same state a plain non-zero `de` exit lands on — so the
+  draft stays recoverable and "every transition writes an audit row" holds.
+  The workspace is also materialised inside the `try`, so an error there no
+  longer leaks the temp directory. Regression tests cover both transitions,
+  a pre-`de` failure, and the untouched happy path.
 - Builder no longer accepts an unresolvable skill pin silently. Skills are
   copied from the registry's **working tree**, and the `tag:` pin was only
   used for lock-file metadata: if it named a tag that does not exist (a typo,
