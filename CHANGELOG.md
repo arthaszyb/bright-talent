@@ -10,6 +10,19 @@ scaffold versions (`scaffold/VERSION`).
 ## [Unreleased]
 
 ### Security
+- `de diff` now detects a security hook that has been silently disabled.
+  The build manifest recorded only `path`/`sha256`/`source`, so drift was a
+  pure content comparison — and `chmod -x` on
+  `.claude/hooks/escalation-guard.py` changes no bytes. A guardrail hook only
+  runs if it is executable, so stripping that bit disables it while
+  `de diff` reported **"no drift: runtime/ matches the last build
+  manifest"**. `de doctor` already flagged the same file as
+  `[FAIL] hook executable`, so the repo treated executability as
+  security-relevant everywhere except the drift contract itself. Reproduced
+  end to end. The manifest now records `executable` per file and
+  `compute_diff` reports a `mode_changed` category, surfaced by `de diff`
+  (exit 1) and `de status`. A manifest without the field is treated as
+  "unknown" and never reported as changed. Build output stays deterministic.
 - The bridge's inbound sanitizer no longer lets a role marker through on a
   line it does not recognise. The `[system]`/`[assistant]`/`[user]` softener
   is anchored with `(?m)^`, and Python's MULTILINE `^` only matches after

@@ -123,7 +123,18 @@ def build_runtime(instance_dir: Path, scaffold_root: Path, config: dict) -> dict
 
     def emit(rel: str, dst: Path, source: str, managed: bool) -> None:
         digest = sha256_file(dst)
-        manifest_entries.append({"path": rel, "sha256": digest, "source": source})
+        # The executable bit is part of what was built, not incidental: the
+        # security hooks only run if they are executable, so `chmod -x` on
+        # one silently disables a guardrail without touching a byte. Record
+        # it so `de diff` can see that kind of tampering at all.
+        manifest_entries.append(
+            {
+                "path": rel,
+                "sha256": digest,
+                "source": source,
+                "executable": bool(dst.stat().st_mode & 0o111),
+            }
+        )
         if managed:
             managed_entries.append(
                 {

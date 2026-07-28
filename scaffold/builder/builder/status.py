@@ -38,11 +38,12 @@ def main(instance_dir: Path, extra: list[str]) -> int:
 
     try:
         drift = compute_diff(instance_dir)
-        clean = not (drift["missing"] or drift["extra"] or drift["modified"])
+        kinds = ("modified", "mode_changed", "missing", "extra")
+        clean = not any(drift.get(k) for k in kinds)
         print(f"drift:           {'none' if clean else 'DRIFT DETECTED'}")
         if not clean:
-            for kind in ("modified", "missing", "extra"):
-                for p in drift[kind]:
+            for kind in kinds:
+                for p in drift.get(kind, []):
                     print(f"  {kind}: {p}")
     except BuildError:
         print("drift:           unknown (no manifest)")

@@ -23,10 +23,15 @@ def compute_diff(instance_dir: Path) -> dict:
     if not manifest_path.is_file():
         raise BuildError("no build manifest found — run `de build` first")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    expected = {e["path"]: e["sha256"] for e in manifest.get("files", [])}
+    entries = manifest.get("files", [])
+    expected = {e["path"]: e["sha256"] for e in entries}
+    # Older manifests predate the executable bit; absent means "unknown", and
+    # an unknown must not be reported as a change.
+    expected_exec = {e["path"]: e["executable"] for e in entries if "executable" in e}
 
     runtime_dir = instance_dir / "runtime"
     actual: dict[str, str] = {}
+    actual_exec: dict[str, bool] = {}
     if runtime_dir.is_dir():
         for f in sorted(runtime_dir.rglob("*")):
             if f.is_file():
@@ -34,23 +39,36 @@ def compute_diff(instance_dir: Path) -> dict:
                 if rel.split("/", 1)[0] in RUNTIME_STATE_DIRS:
                     continue
                 actual[rel] = sha256_file(f)
+                actual_exec[rel] = bool(f.stat().st_mode & 0o111)
 
+    both = set(expected) & set(actual)
     missing = sorted(set(expected) - set(actual))
     extra = sorted(set(actual) - set(expected))
-    modified = sorted(p for p in (set(expected) & set(actual)) if expected[p] != actual[p])
+    modified = sorted(p for p in both if expected[p] != actual[p])
+    # Content-identical but no longer executable (or newly executable): the
+    # hash comparison above cannot see this, and for a hook it is the
+    # difference between an enforced guardrail and a dead file.
+    mode_changed = sorted(
+        p for p in both
+        if p in expected_exec and p not in modified and expected_exec[p] != actual_exec[p]
+    )
 
-    return {"missing": missing, "extra": extra, "modified": modified}
+    return {"missing": missing, "extra": extra, "modified": modified, "mode_changed": mode_changed}
 
 
 def main(instance_dir: Path, extra: list[str]) -> int:
     result = compute_diff(instance_dir)
-    if not result["missing"] and not result["extra"] and not result["modified"]:
+    if not any(result[k] for k in ("missing", "extra", "modified", "mode_changed")):
         print("no drift: runtime/ matches the last build manifest.")
         return 0
 
     if result["modified"]:
         print("modified:")
         for p in result["modified"]:
+            print(f"  - {p}")
+    if result["mode_changed"]:
+        print("permissions changed:")
+        for p in result["mode_changed"]:
             print(f"  - {p}")
     if result["missing"]:
         print("missing:")
