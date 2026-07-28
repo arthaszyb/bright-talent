@@ -9,7 +9,7 @@
 #}
 {
   "permissions": {
-    "defaultMode": "{{ default_mode | default('acceptEdits', true) }}",
+    "defaultMode": {{ (default_mode | default('acceptEdits', true)) | tojson }},
     "allow": [
       "Read",
       "Grep",
@@ -18,7 +18,7 @@
       "mcp__de-agent-escalate__escalate"
 {% if extra_allow %}
       {%- for pattern in extra_allow %},
-      "{{ pattern }}"
+      {{ pattern | tojson }}
       {%- endfor %}
 {% endif %}
     ],
@@ -34,7 +34,7 @@
       "Edit(.claude/policy/**)"
 {% if extra_deny %}
       {%- for pattern in extra_deny %},
-      "{{ pattern }}"
+      {{ pattern | tojson }}
       {%- endfor %}
 {% endif %}
     ],
@@ -43,7 +43,7 @@
       "Bash(sudo:*)"
 {% if extra_ask %}
       {%- for pattern in extra_ask %},
-      "{{ pattern }}"
+      {{ pattern | tojson }}
       {%- endfor %}
 {% endif %}
     ]
@@ -118,7 +118,7 @@
     "CHANGE_GATEWAY_BASE": "http://localhost:8801"
 {% if env_vars %}
     {%- for key, value in env_vars.items() %},
-    "{{ key }}": "{{ value }}"
+    {{ key | tojson }}: {{ value | tojson }}
     {%- endfor %}
 {% endif %}
   }

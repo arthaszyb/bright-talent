@@ -12,7 +12,7 @@
     }
 {% if extra_servers %}
     {%- for name, config in extra_servers.items() %},
-    "{{ name }}": {{ config | tojson }}
+    {{ name | tojson }}: {{ config | tojson }}
     {%- endfor %}
 {% endif %}
   },

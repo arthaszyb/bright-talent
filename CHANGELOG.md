@@ -9,7 +9,24 @@ scaffold versions (`scaffold/VERSION`).
 
 ## [Unreleased]
 
-### Security
+- A crafted `instance.yaml` can no longer forge JSON structure in the
+  rendered `settings.json` / `.mcp.json` and escalate its own permissions.
+  The templates interpolated instance-supplied strings raw (`"{{ pattern }}"`),
+  and validation only requires `extra_allow` / `extra_deny` / `extra_ask` to
+  be lists of non-empty strings — so a pattern containing `"], "allow": ["…`
+  closed the string and opened a new `allow` key. Python keeps the *last*
+  duplicate key, so the injected array silently **replaced** the base
+  allow-list. Verified end to end: an instance that `de validate` reports as
+  valid built successfully with `allow` reduced to `["Bash(rm -rf /)",
+  "Bash(:*)"]` — the entire `Read`/`Grep`/`Glob`/`Skill`/escalate floor gone
+  and arbitrary shell granted. The same technique reached `deny`, `env`, the
+  `hooks` wiring (skill-gate, injection-detector, escalation-guard) and the
+  MCP server map. This defeated precisely the guarantee `merge.py`'s
+  monotonicity and shadowing checks exist to provide. Every interpolation in
+  the JSON templates now goes through `| tojson`. Output for valid configs is
+  byte-identical, so no rebuild is required. Regression tests in
+  `scaffold/builder/tests/test_render_injection.py`, six of which fail
+  against the previous templates.
 - `result-sanitizer` hook no longer crashes (and silently skips credential
   scanning) on structured tool output. PostToolUse `tool_response` is usually
   a dict/list, and the hook ran `re.search` over it directly, raising an
